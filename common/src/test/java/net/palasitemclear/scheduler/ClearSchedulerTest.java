@@ -46,4 +46,33 @@ final class ClearSchedulerTest {
 
         assertEquals(20, scheduler.remainingTicks());
     }
+
+    @Test
+    void pausedCountdownDoesNotAdvance() {
+        ClearScheduler scheduler = new ClearScheduler(2);
+
+        scheduler.pause();
+
+        assertFalse(scheduler.tick());
+        assertEquals(2, scheduler.remainingTicks());
+        assertEquals(ClearScheduler.State.PAUSED, scheduler.state());
+
+        scheduler.resume();
+        assertFalse(scheduler.tick());
+        assertEquals(1, scheduler.remainingTicks());
+    }
+
+    @Test
+    void stoppedCountdownRequiresAStart() {
+        ClearScheduler scheduler = new ClearScheduler(1);
+
+        scheduler.stop();
+
+        assertFalse(scheduler.tick());
+        assertEquals(ClearScheduler.State.STOPPED, scheduler.state());
+
+        scheduler.start();
+        assertTrue(scheduler.tick());
+        assertEquals(ClearScheduler.State.RUNNING, scheduler.state());
+    }
 }
