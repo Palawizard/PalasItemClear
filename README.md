@@ -23,3 +23,9 @@ Build both loader artifacts:
 ```powershell
 .\gradlew.bat build
 ```
+
+Smoke-test dedicated server startup and shutdown for both loaders:
+
+```powershell
+.\scripts\smoke-test-servers.ps1
+```
