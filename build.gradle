@@ -51,4 +51,8 @@ allprojects {
     java {
         withSourcesJar()
     }
+
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
 }
