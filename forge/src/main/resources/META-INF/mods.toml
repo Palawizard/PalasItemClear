@@ -1,0 +1,35 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+#issueTrackerURL = ""
+license = "All Rights Reserved"
+
+[[mods]]
+modId = "palasitemclear"
+version = "${version}"
+displayName = "Palas Item Clear"
+authors = "Palas"
+description = '''
+Automatically removes dropped items after configurable warnings.
+'''
+#logoFile = ""
+
+[[dependencies.palasitemclear]]
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.palasitemclear]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1,1.21)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.palasitemclear]]
+modId = "architectury"
+mandatory = true
+versionRange = "[9.2.14,)"
+ordering = "AFTER"
+side = "BOTH"
