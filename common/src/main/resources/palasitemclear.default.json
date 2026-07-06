@@ -1,0 +1,18 @@
+{
+  "configVersion": 1,
+  "schedule": {
+    "intervalSeconds": 300,
+    "warningSeconds": [60, 30, 5]
+  },
+  "messages": {
+    "warning": "<yellow>Items on the ground will be cleared in <gold>{seconds}</gold> seconds.",
+    "cleared": "<gray>Cleared <white>{count}</white> dropped items."
+  },
+  "filters": {
+    "excludedItems": [],
+    "excludedDimensions": [],
+    "minAgeTicks": 0,
+    "excludeNamedItems": false,
+    "excludePlayerOwnedItems": false
+  }
+}
