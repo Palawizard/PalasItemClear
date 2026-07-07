@@ -12,4 +12,8 @@ public final class ConfigHolder {
     void set(ModConfig value) {
         config.set(value);
     }
+
+    public void replace(ModConfig value) {
+        config.set(value);
+    }
 }

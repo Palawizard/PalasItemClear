@@ -93,6 +93,12 @@ public final class ConfigLoader {
         return config;
     }
 
+    public void persist(Path configDirectory, ModConfig config) {
+        Path configPath = configDirectory.resolve(ConfigConstants.CONFIG_FILE_NAME);
+        writeConfig(configPath, config);
+        holder.set(config);
+    }
+
     public void writeConfig(Path configPath, ModConfig config) {
         Path tempPath = configPath.resolveSibling(configPath.getFileName() + ".tmp");
 

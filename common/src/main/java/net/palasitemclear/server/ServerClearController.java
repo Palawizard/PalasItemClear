@@ -12,7 +12,10 @@ import net.palasitemclear.clear.ClearResult;
 import net.palasitemclear.clear.DroppedItemClearer;
 import net.palasitemclear.config.ConfigHolder;
 import net.palasitemclear.config.ConfigLoader;
+import net.palasitemclear.config.ConfigValidationException;
+import net.palasitemclear.config.ConfigValidator;
 import net.palasitemclear.config.ModConfig;
+import net.palasitemclear.config.ScheduleConfig;
 import net.palasitemclear.message.MiniMessageRenderer;
 import net.palasitemclear.scheduler.ClearScheduler;
 import org.slf4j.Logger;
@@ -50,6 +53,7 @@ public final class ServerClearController {
         }
 
         this.server = server;
+        ServerClearRegistry.bind(this);
         ModConfig config = configLoader.loadOrCreate(PlatformPaths.getConfigDirectory());
         applySchedule(config);
         firedWarnings.clear();
@@ -71,6 +75,48 @@ public final class ServerClearController {
             return;
         }
 
+        performClear(activeServer);
+    }
+
+    public ClearResult clearNow() {
+        MinecraftServer activeServer = server;
+        if (activeServer == null || !activeServer.isRunning()) {
+            return ClearResult.empty();
+        }
+
+        performClear(activeServer);
+        scheduler.reset();
+        return lastResult;
+    }
+
+    public void resetSchedule() {
+        scheduler.reset();
+        firedWarnings.clear();
+    }
+
+    public void setIntervalSeconds(int intervalSeconds) throws ConfigValidationException {
+        ModConfig current = configHolder.get();
+        ModConfig updated = ConfigValidator.validate(new ModConfig(
+                current.configVersion(),
+                new ScheduleConfig(intervalSeconds, current.schedule().warningSeconds()),
+                current.messages(),
+                current.filters()
+        ));
+
+        configHolder.replace(updated);
+        applySchedule(updated);
+        firedWarnings.clear();
+
+        if (server != null) {
+            configLoader.persist(PlatformPaths.getConfigDirectory(), updated);
+        }
+    }
+
+    public boolean isActive() {
+        return server != null && server.isRunning();
+    }
+
+    private void performClear(MinecraftServer activeServer) {
         firedWarnings.clear();
 
         try {
@@ -93,6 +139,7 @@ public final class ServerClearController {
         server = null;
         firedWarnings.clear();
         scheduler.stop();
+        ServerClearRegistry.unbind();
         LOGGER.info("Item clearing scheduler stopped");
     }
 

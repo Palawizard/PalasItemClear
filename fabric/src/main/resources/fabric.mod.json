@@ -8,7 +8,7 @@
     "Palas"
   ],
   "license": "All-Rights-Reserved",
-  "environment": "*",
+  "environment": "server",
   "entrypoints": {
     "main": [
       "net.palasitemclear.fabric.PalasItemClearFabric"
