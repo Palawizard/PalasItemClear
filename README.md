@@ -113,7 +113,7 @@ Every cleared stack is held in memory for `bin.retentionSeconds`. Taking an item
 ```powershell
 .\gradlew.bat clean build
 .\scripts\smoke-test-servers.ps1
-.\scripts\check-release-artifacts.ps1 -SkipBuild
+.\scripts\check-release-artifacts.ps1 -SkipBuild -IncludeNeoForge
 ```
 
 The release check accepts only the loader JARs without `-sources` or `-dev-shadow` in their names.

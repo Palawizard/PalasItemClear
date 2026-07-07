@@ -1,5 +1,6 @@
 package net.palasitemclear.message;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Map;
@@ -25,5 +26,13 @@ final class MiniMessageRendererTest {
         );
 
         assertTrue(component.getString().contains("Cleared 12 dropped items."));
+    }
+
+    @Test
+    void rendersShortHexColors() {
+        Component rendered = MiniMessageRenderer.render("<#0f8>Mint</#0f8>", Map.of());
+
+        Component coloredText = rendered.getSiblings().get(0).getSiblings().get(0);
+        assertEquals(0x00ff88, coloredText.getStyle().getColor().getValue());
     }
 }

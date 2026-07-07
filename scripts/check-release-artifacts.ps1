@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [switch]$IncludeNeoForge,
+    [switch]$NeoForgeOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,21 +15,32 @@ if (-not $SkipBuild) {
     }
 }
 
-$expected = @(
+$expected = if ($NeoForgeOnly) { @() } else { @(
     @{
         Loader = 'fabric'
+        Directory = 'fabric\build\libs'
         Pattern = 'palas-item-clear-1.20.1-fabric-*.jar'
         Metadata = 'fabric.mod.json'
     },
     @{
         Loader = 'forge'
+        Directory = 'forge\build\libs'
         Pattern = 'palas-item-clear-1.20.1-forge-*.jar'
         Metadata = 'META-INF/mods.toml'
     }
-)
+) }
+
+if ($IncludeNeoForge -or $NeoForgeOnly) {
+    $expected += @{
+        Loader = 'neoforge'
+        Directory = 'versions\1.21.1-neoforge\build\libs'
+        Pattern = 'palas-item-clear-1.21.1-neoforge-*.jar'
+        Metadata = 'META-INF/neoforge.mods.toml'
+    }
+}
 
 foreach ($artifact in $expected) {
-    $libs = Join-Path $projectRoot "$($artifact.Loader)\build\libs"
+    $libs = Join-Path $projectRoot $artifact.Directory
     $jars = @(Get-ChildItem -LiteralPath $libs -Filter $artifact.Pattern -File |
         Where-Object { $_.Name -notmatch '-(sources|dev-shadow)\.jar$' })
 

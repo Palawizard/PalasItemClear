@@ -72,10 +72,47 @@ jobs:
         shell: pwsh
         run: ./scripts/smoke-test-servers.ps1
 
+  build-1-21-1-neoforge:
+    name: Minecraft 1.21.1 NeoForge
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Build and test NeoForge
+        shell: pwsh
+        run: ./gradlew.bat -p versions/1.21.1-neoforge clean build --no-daemon
+
+      - name: Verify NeoForge artifact
+        shell: pwsh
+        run: ./scripts/check-release-artifacts.ps1 -SkipBuild -NeoForgeOnly
+
+      - name: Smoke-test NeoForge server
+        shell: pwsh
+        run: ./scripts/smoke-test-neoforge.ps1
+
+      - name: Upload NeoForge artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: palas-item-clear-1.21.1-neoforge
+          path: versions/1.21.1-neoforge/build/libs/palas-item-clear-1.21.1-neoforge-*.jar
+          if-no-files-found: error
+
   release:
     name: Publish GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [build-1-20-1, smoke-1-20-1]
+    needs: [build-1-20-1, smoke-1-20-1, build-1-21-1-neoforge]
     runs-on: ubuntu-latest
     permissions:
       contents: write

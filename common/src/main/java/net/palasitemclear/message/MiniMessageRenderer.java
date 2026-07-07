@@ -127,13 +127,26 @@ public final class MiniMessageRenderer {
 
         if (normalized.startsWith("#") && (normalized.length() == 7 || normalized.length() == 4)) {
             try {
-                return activeStyle.withColor(TextColor.parseColor(normalized));
+                return activeStyle.withColor(TextColor.fromRgb(parseHexColor(normalized)));
             } catch (NumberFormatException ignored) {
                 return activeStyle;
             }
         }
 
         return activeStyle;
+    }
+
+    private static int parseHexColor(String value) {
+        String hex = value.substring(1);
+        if (hex.length() == 3) {
+            hex = new String(new char[] {
+                    hex.charAt(0), hex.charAt(0),
+                    hex.charAt(1), hex.charAt(1),
+                    hex.charAt(2), hex.charAt(2)
+            });
+        }
+
+        return Integer.parseInt(hex, 16);
     }
 
     private static void appendText(MutableComponent target, String text, Style style) {
