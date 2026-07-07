@@ -130,10 +130,13 @@ jobs:
         with:
           cache-provider: basic
 
+      # Use each band's own Gradle wrapper: the newest bands pin Gradle 9.5.1 for
+      # ForgeGradle 7 and recent Loom, while older bands stay on 8.12.
       - name: Build and test
+        working-directory: ${{ matrix.path }}
         run: |
           export JAVA_HOME="$JAVA_HOME_21_X64"
-          ./gradlew -p ${{ matrix.path }} clean build --no-daemon \
+          ./gradlew clean build --no-daemon \
             -Dorg.gradle.java.installations.fromEnv=JAVA_HOME_17_X64,JAVA_HOME_21_X64,JAVA_HOME_25_X64
 
       - name: Upload loader artifact
