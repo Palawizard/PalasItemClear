@@ -27,13 +27,14 @@ function Invoke-GradleBuild {
 
     $previousJavaHome = $env:JAVA_HOME
     try {
-        if ($JavaVersion -eq 17) {
+        # Gradle 8.12 cannot run on Java 25; run the build on <=21 and let the toolchain
+        # compile the band's real release. Toolchain paths keep Java 25 discoverable.
+        $runJava = if ($JavaVersion -ge 25) { 21 } else { $JavaVersion }
+        if ($runJava -eq 17) {
             $candidates = @(
                 'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
                 'C:\Program Files\Eclipse Adoptium\jdk-17*'
             )
-        } elseif ($JavaVersion -ge 25) {
-            $candidates = @('C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot')
         } else {
             $candidates = @('C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot')
         }
@@ -51,13 +52,20 @@ function Invoke-GradleBuild {
             }
         }
 
+        $installPaths = @(
+            'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
+            'C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot',
+            'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
+        ) | Where-Object { Test-Path -LiteralPath $_ }
+        $toolchainArg = "-Dorg.gradle.java.installations.paths=$($installPaths -join ',')"
+
         Push-Location $WorkingDirectory
         if (Test-Path (Join-Path $WorkingDirectory 'gradlew.bat')) {
             Push-Location $WorkingDirectory
-            & .\gradlew.bat @ExtraArgs
+            & .\gradlew.bat @ExtraArgs $toolchainArg
         } else {
             Push-Location $projectRoot
-            & .\gradlew.bat -p $WorkingDirectory @ExtraArgs
+            & .\gradlew.bat -p $WorkingDirectory @ExtraArgs $toolchainArg
         }
         if ($LASTEXITCODE -ne 0) { throw "Gradle failed with exit code $LASTEXITCODE" }
     } finally {

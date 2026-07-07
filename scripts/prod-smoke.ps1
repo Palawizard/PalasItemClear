@@ -63,6 +63,15 @@ function Resolve-JavaExe {
     throw "No JDK $JavaVersion found for band '$BandId'."
 }
 
+function Get-JdkInstallationPaths {
+    # Comma-separated JDK homes so Gradle toolchains resolve on any machine (local or CI).
+    $homes = @()
+    foreach ($v in 17, 21, 25) {
+        try { $homes += Split-Path -Parent (Split-Path -Parent (Resolve-JavaExe -JavaVersion $v)) } catch {}
+    }
+    return ($homes | Select-Object -Unique) -join ','
+}
+
 function Get-File {
     param([string]$Url, [string]$Destination)
     if (Test-Path -LiteralPath $Destination) { return }
@@ -246,12 +255,16 @@ if (-not $SkipBuild) {
     $relative = $loaderConfig.path -replace '/', '\'
     $versionRoot = Join-Path $projectRoot $relative
     $javaHomePrev = $env:JAVA_HOME
-    $env:JAVA_HOME = Split-Path -Parent (Split-Path -Parent (Resolve-JavaExe -JavaVersion $band.java))
+    # Gradle 8.12 cannot run on Java 25; build on <=21 and let the toolchain compile the
+    # band's real release. Installation paths keep the Java 25 toolchain discoverable.
+    $buildJava = if ($band.java -ge 25) { 21 } else { $band.java }
+    $env:JAVA_HOME = Split-Path -Parent (Split-Path -Parent (Resolve-JavaExe -JavaVersion $buildJava))
+    $toolchains = "-Dorg.gradle.java.installations.paths=$(Get-JdkInstallationPaths)"
     try {
         if ($loaderConfig.path -in @('forge', 'fabric')) {
-            & (Join-Path $projectRoot 'gradlew.bat') ":$($loaderConfig.path):build" '--no-daemon'
+            & (Join-Path $projectRoot 'gradlew.bat') ":$($loaderConfig.path):build" '--no-daemon' $toolchains
         } else {
-            & (Join-Path $projectRoot 'gradlew.bat') '-p' $versionRoot 'build' '--no-daemon'
+            & (Join-Path $projectRoot 'gradlew.bat') '-p' $versionRoot 'build' '--no-daemon' $toolchains
         }
         if ($LASTEXITCODE -ne 0) { throw "Gradle build failed for $BandId/$Loader." }
     } finally { $env:JAVA_HOME = $javaHomePrev }
