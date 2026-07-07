@@ -1,0 +1,83 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.gradle.userdev' version '7.0.80'
+}
+
+apply from: '../shared/sync-shared-sources.gradle'
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-neoforge"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_release.toInteger())
+
+configureSharedSourceSets()
+
+accessTransformers {
+    file 'src/main/resources/META-INF/accesstransformer.cfg'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+}
+
+runs {
+    configureEach {
+        modSource sourceSets.main
+    }
+
+    server {
+        programArgument '--nogui'
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = project.java_release.toInteger()
+}
+
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.named('compileTestJava') {
+    enabled = false
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def replacements = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_version            : mod_version,
+            mod_license            : mod_license
+    ]
+    inputs.properties replacements
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replacements
+    }
+}

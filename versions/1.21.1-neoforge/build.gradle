@@ -1,0 +1,120 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-neoforge"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+def syncSharedMain = tasks.register('syncSharedMain', Sync) {
+    from '../../common/src/main/java'
+    exclude 'net/palasitemclear/PalasItemClear.java'
+    exclude 'net/palasitemclear/PlatformPaths.java'
+    exclude 'net/palasitemclear/command/PalasItemClearCommands.java'
+    filter { line ->
+        line
+                .replace('ItemStack.isSameItemSameTags(entry.stack(), remaining)',
+                        'ItemStack.isSameItemSameComponents(entry.stack(), remaining)')
+                .replace('item.getItem().hasCustomHoverName()',
+                        'item.getItem().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)')
+                .replace('stack.setHoverName(Component.literal(label));',
+                        'stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(label));')
+    }
+    into layout.buildDirectory.dir('generated/shared-main')
+}
+
+def syncSharedTest = tasks.register('syncSharedTest', Sync) {
+    from '../../common/src/test/java'
+    filter { line ->
+        line.replace('new ResourceLocation("minecraft", "overworld")',
+                'ResourceLocation.fromNamespaceAndPath("minecraft", "overworld")')
+    }
+    into layout.buildDirectory.dir('generated/shared-test')
+}
+
+sourceSets {
+    main {
+        java.srcDir syncSharedMain
+        resources.srcDir '../../common/src/main/resources'
+        resources.exclude 'architectury.common.json'
+        resources.exclude 'palasitemclear.accesswidener'
+    }
+    test {
+        java.srcDir syncSharedTest
+    }
+}
+
+neoForge {
+    version = project.neo_version
+    validateAccessTransformers = true
+
+    runs {
+        server {
+            server()
+            programArgument '--nogui'
+        }
+    }
+
+    mods {
+        palasitemclear {
+            sourceSet sourceSets.main
+        }
+    }
+
+    unitTest {
+        enable()
+        testedMod = mods.palasitemclear
+    }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def replacements = [
+            minecraft_version_range: minecraft_version_range,
+            neo_version: neo_version,
+            loader_version_range: loader_version_range,
+            mod_id: mod_id,
+            mod_name: mod_name,
+            mod_version: mod_version,
+            mod_license: mod_license
+    ]
+    inputs.properties replacements
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand replacements
+    }
+}

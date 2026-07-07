@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible problem in Palas Item Clear
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not include server credentials or other sensitive information.
+  - type: input
+    id: artifact
+    attributes:
+      label: Artifact
+      description: The JAR you installed (see docs/SUPPORT.md).
+      placeholder: palas-item-clear-1.21.1-neoforge
+    validations:
+      required: true
+  - type: dropdown
+    id: loader
+    attributes:
+      label: Loader
+      options:
+        - Forge
+        - Fabric
+        - NeoForge
+    validations:
+      required: true
+  - type: input
+    id: minecraft
+    attributes:
+      label: Minecraft version
+      placeholder: "1.21.1"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: Describe what happened and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      placeholder: |
+        1. Start the server with...
+        2. Run /palasitemclear...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Relevant logs and config
+      description: Include server log excerpts and your config/palasitemclear.json when relevant.

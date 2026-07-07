@@ -1,0 +1,22 @@
+ext.componentize2SharedSourceLine = { String line ->
+    line
+            .replace('ItemStack.isSameItemSameTags(entry.stack(), remaining)',
+                    'ItemStack.isSameItemSameComponents(entry.stack(), remaining)')
+            .replace('item.getItem().hasCustomHoverName()',
+                    'item.getItem().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)')
+            .replace('stack.setHoverName(Component.literal(label));',
+                    'stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(label));')
+            .replace('return online.getGameProfile().getName();', 'return online.getGameProfile().name();')
+            .replace('if (server.getProfileCache() == null) {', 'if (false) {')
+            .replace('return server.getProfileCache()', 'return server.services().profileResolver().fetchById(ownerUuid)')
+            .replace('.get(ownerUuid)', '')
+            .replace('.map(profile -> profile.getName())', '.map(profile -> profile.name())')
+            .replace('MinecraftServer server = player.serverLevel().getServer();',
+                    'MinecraftServer server = player.level().getServer();')
+            .replace('                item.thrower', '                null')
+}
+
+ext.componentize2SharedTestLine = { String line ->
+    line.replace('new ResourceLocation("minecraft", "overworld")',
+            'ResourceLocation.fromNamespaceAndPath("minecraft", "overworld")')
+}

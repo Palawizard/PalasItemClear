@@ -1,12 +1,23 @@
 build/
 *.ipr
 run/
+runs/
+logs/
 *.iws
 out/
 *.iml
 .gradle/
+.architectury-transformer/
 output/
+*.log
+smoke-test.stdout.log
+smoke-test.stderr.log
+smoke-test.stdin.txt
 bin/
+!common/src/main/java/net/palasitemclear/bin/
+!common/src/main/java/net/palasitemclear/bin/**
+!common/src/test/java/net/palasitemclear/bin/
+!common/src/test/java/net/palasitemclear/bin/**
 libs/
 
 .classpath

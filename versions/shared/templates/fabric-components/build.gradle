@@ -1,0 +1,94 @@
+plugins {
+    id 'dev.architectury.loom' version "${loom_version}"
+    id 'architectury-plugin' version '3.4-SNAPSHOT'
+    id 'java-library'
+}
+
+apply from: '../shared/sync-shared-sources.gradle'
+
+version = mod_version
+group = maven_group
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-fabric"
+}
+
+configureSharedSourceSets {
+    java.srcDir 'src/main/java'
+    resources.srcDir 'src/main/resources'
+}
+
+architectury {
+    minecraft = project.minecraft_version
+    fabric()
+}
+
+loom {
+    silentMojangMappingsLicense()
+    if (file('src/main/resources/palasitemclear.accesswidener').exists()) {
+        accessWidenerPath = file('src/main/resources/palasitemclear.accesswidener')
+    }
+    mods {
+        palasitemclear {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modApi "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = project.java_release.toInteger()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(project.java_release.toInteger())
+    }
+}
+
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.named('compileTestJava') {
+    enabled = false
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property 'version', project.version
+    inputs.property 'fabric_minecraft_version_range', project.findProperty('fabric_minecraft_version_range') ?: project.minecraft_version_range
+    filesMatching('fabric.mod.json') {
+        expand version: project.version, fabric_minecraft_version_range: project.fabric_minecraft_version_range
+    }
+}

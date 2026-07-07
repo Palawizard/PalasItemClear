@@ -7,8 +7,8 @@
   "authors": [
     "Palas"
   ],
-  "license": "All-Rights-Reserved",
-  "environment": "*",
+  "license": "MIT",
+  "environment": "server",
   "entrypoints": {
     "main": [
       "net.palasitemclear.fabric.PalasItemClearFabric"
@@ -16,7 +16,8 @@
   },
   "depends": {
     "fabric": "*",
-    "minecraft": "~1.20.1",
+    "fabric-api": ">=0.92.9+1.20.1",
+    "minecraft": ">=1.20.1- <1.20.2-",
     "architectury": ">=9.2.14"
   }
 }

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "palasitemclear",
+  "version": "${version}",
+  "name": "Palas Item Clear",
+  "description": "Automatically removes dropped items after configurable warnings.",
+  "authors": [
+    "Palas"
+  ],
+  "license": "MIT",
+  "environment": "server",
+  "entrypoints": {
+    "server": [
+      "net.palasitemclear.fabric.PalasItemClearFabric"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "fabric-api": ">=0.154.0+26.2",
+    "minecraft": ">=26.1 <=26.2"
+  }
+}
