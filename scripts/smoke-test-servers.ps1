@@ -57,5 +57,14 @@ foreach ($loader in @('forge', 'fabric')) {
         throw "$loader dedicated server did not complete a clean startup and shutdown.`n$details"
     }
 
+    $log = Get-Content -LiteralPath $logFile -Raw
+    if ($log -match '(?im)^.*(?:ERROR|Exception in server tick loop|Failed to start).*$') {
+        throw "$loader dedicated server log contains an error.`n$($Matches[0])"
+    }
+
+    if ($log -notmatch 'Item clearing scheduler started with intervalTicks=') {
+        throw "$loader dedicated server did not start the item clearing scheduler."
+    }
+
     Write-Host "$loader dedicated server started and stopped successfully."
 }

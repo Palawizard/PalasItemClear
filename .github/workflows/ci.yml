@@ -33,6 +33,10 @@ jobs:
       - name: Build and test
         run: ./gradlew clean build --no-daemon
 
+      - name: Verify release artifacts
+        shell: pwsh
+        run: ./scripts/check-release-artifacts.ps1 -SkipBuild
+
       - name: Upload loader artifacts
         uses: actions/upload-artifact@v7
         with:
