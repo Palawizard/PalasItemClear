@@ -18,6 +18,26 @@ function Add-Result {
     Write-Host "[$Status] $Band / $Loader - $Detail" -ForegroundColor $color
 }
 
+function Get-JdkHome {
+    # Resolve a JDK home by major version: GitHub Actions (JAVA_HOME_<v>_X64) first,
+    # then common local install locations.
+    param([int]$Version, [switch]$Optional)
+    $ci = [Environment]::GetEnvironmentVariable("JAVA_HOME_${Version}_X64")
+    if ($ci -and (Test-Path -LiteralPath $ci)) { return $ci }
+    $candidates = switch ($Version) {
+        17 { @('C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot', 'C:\Program Files\Eclipse Adoptium\jdk-17*') }
+        25 { @('C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot', 'C:\Program Files\Eclipse Adoptium\jdk-25*') }
+        default { @('C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot', 'C:\Program Files\Eclipse Adoptium\jdk-21*') }
+    }
+    foreach ($c in $candidates) {
+        if ($c -notmatch '[\*\?]' -and (Test-Path -LiteralPath $c)) { return $c }
+        $r = Get-ChildItem -Path $c -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($r) { return $r.FullName }
+    }
+    if ($Optional) { return $null }
+    throw "No JDK $Version found."
+}
+
 function Invoke-GradleBuild {
     param(
         [string]$WorkingDirectory,
@@ -30,33 +50,9 @@ function Invoke-GradleBuild {
         # Gradle 8.12 cannot run on Java 25; run the build on <=21 and let the toolchain
         # compile the band's real release. Toolchain paths keep Java 25 discoverable.
         $runJava = if ($JavaVersion -ge 25) { 21 } else { $JavaVersion }
-        if ($runJava -eq 17) {
-            $candidates = @(
-                'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
-                'C:\Program Files\Eclipse Adoptium\jdk-17*'
-            )
-        } else {
-            $candidates = @('C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot')
-        }
+        $env:JAVA_HOME = Get-JdkHome -Version $runJava
 
-        foreach ($candidate in $candidates) {
-            if ($candidate -notmatch '[\*\?]' -and (Test-Path -LiteralPath $candidate)) {
-                $env:JAVA_HOME = $candidate
-                break
-            }
-
-            $resolved = Get-ChildItem -Path $candidate -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($resolved) {
-                $env:JAVA_HOME = $resolved.FullName
-                break
-            }
-        }
-
-        $installPaths = @(
-            'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
-            'C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot',
-            'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
-        ) | Where-Object { Test-Path -LiteralPath $_ }
+        $installPaths = @(17, 21, 25 | ForEach-Object { Get-JdkHome -Version $_ -Optional } | Where-Object { $_ })
         $toolchainArg = "-Dorg.gradle.java.installations.paths=$($installPaths -join ',')"
 
         Push-Location $WorkingDirectory
