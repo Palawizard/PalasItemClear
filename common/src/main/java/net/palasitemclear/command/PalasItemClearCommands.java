@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.palasitemclear.PalasItemClear;
 import net.palasitemclear.config.ConfigValidationException;
+import net.palasitemclear.config.ConfigPersistenceException;
 import net.palasitemclear.server.ServerClearController;
 import net.palasitemclear.server.ServerClearRegistry;
 
@@ -92,7 +93,7 @@ public final class PalasItemClearCommands {
                                             return runWithController(context.getSource(), controller -> {
                                                 try {
                                                     return ClearAdminService.setInterval(controller, seconds);
-                                                } catch (ConfigValidationException exception) {
+                                                } catch (ConfigValidationException | ConfigPersistenceException exception) {
                                                     throw new SimpleCommandExceptionType(
                                                             Component.literal(exception.getMessage())
                                                     ).create();

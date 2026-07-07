@@ -31,7 +31,7 @@ final class ServerClearControllerAdminTest {
     }
 
     @Test
-    void setIntervalUpdatesSchedulerAndConfiguration() throws ConfigValidationException {
+    void setIntervalUpdatesSchedulerAndConfiguration() throws Exception {
         ServerClearController controller = new ServerClearController(new ConfigHolder(), new DroppedItemClearer());
 
         controller.setIntervalSeconds(120);
@@ -41,7 +41,7 @@ final class ServerClearControllerAdminTest {
     }
 
     @Test
-    void setIntervalPreservesPausedState() throws ConfigValidationException {
+    void setIntervalPreservesPausedState() throws Exception {
         ServerClearController controller = new ServerClearController(new ConfigHolder(), new DroppedItemClearer());
         controller.pause();
 

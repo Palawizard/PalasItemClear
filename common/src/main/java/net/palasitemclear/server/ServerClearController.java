@@ -16,6 +16,7 @@ import net.palasitemclear.clear.ClearResult;
 import net.palasitemclear.clear.DroppedItemClearer;
 import net.palasitemclear.config.ConfigHolder;
 import net.palasitemclear.config.ConfigLoader;
+import net.palasitemclear.config.ConfigPersistenceException;
 import net.palasitemclear.config.ConfigValidationException;
 import net.palasitemclear.config.ConfigValidator;
 import net.palasitemclear.config.ModConfig;
@@ -101,7 +102,8 @@ public final class ServerClearController {
         firedWarnings.clear();
     }
 
-    public void setIntervalSeconds(int intervalSeconds) throws ConfigValidationException {
+    public void setIntervalSeconds(int intervalSeconds)
+            throws ConfigValidationException, ConfigPersistenceException {
         ModConfig current = configHolder.get();
         ModConfig updated = ConfigValidator.validate(new ModConfig(
                 current.configVersion(),
@@ -111,13 +113,14 @@ public final class ServerClearController {
                 current.bin()
         ));
 
-        configHolder.replace(updated);
-        applySchedule(updated);
-        firedWarnings.clear();
-
         if (server != null) {
             configLoader.persist(PlatformPaths.getConfigDirectory(), updated);
+        } else {
+            configHolder.replace(updated);
         }
+
+        applySchedule(updated);
+        firedWarnings.clear();
     }
 
     public RecoveryBinStore recoveryBin() {

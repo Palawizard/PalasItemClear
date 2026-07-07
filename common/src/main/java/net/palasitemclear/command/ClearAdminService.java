@@ -11,6 +11,7 @@ import net.palasitemclear.bin.RecoveryBinMenu;
 import net.palasitemclear.bin.RecoveryBinStore;
 import net.palasitemclear.clear.ClearResult;
 import net.palasitemclear.config.ConfigValidationException;
+import net.palasitemclear.config.ConfigPersistenceException;
 import net.palasitemclear.config.ModConfig;
 import net.palasitemclear.scheduler.ClearScheduler;
 import net.palasitemclear.server.ServerClearController;
@@ -121,7 +122,7 @@ public final class ClearAdminService {
     }
 
     public static String setInterval(ServerClearController controller, int intervalSeconds)
-            throws ConfigValidationException {
+            throws ConfigValidationException, ConfigPersistenceException {
         if (!isActive(controller)) {
             return NOT_RUNNING;
         }

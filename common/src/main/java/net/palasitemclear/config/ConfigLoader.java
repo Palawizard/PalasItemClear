@@ -9,6 +9,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import net.palasitemclear.PalasItemClear;
@@ -30,9 +31,13 @@ public final class ConfigLoader {
 
         if (!Files.exists(configPath)) {
             ModConfig defaults = ModConfig.defaults();
-            writeConfig(configPath, defaults);
+            try {
+                writeConfig(configPath, defaults);
+                LOGGER.info("Created default configuration at {}", configPath);
+            } catch (IOException exception) {
+                LOGGER.warn("Could not create default configuration at {}; using in-memory defaults", configPath, exception);
+            }
             holder.set(defaults);
-            LOGGER.info("Created default configuration at {}", configPath);
             return defaults;
         }
 
@@ -49,7 +54,11 @@ public final class ConfigLoader {
 
             if (migrated.configVersion() != loaded.configVersion()
                     || !migrated.equals(loaded)) {
-                writeConfig(configPath, migrated);
+                try {
+                    writeConfig(configPath, migrated);
+                } catch (IOException exception) {
+                    LOGGER.warn("Could not persist normalized configuration at {}", configPath, exception);
+                }
             }
 
             holder.set(migrated);
@@ -94,13 +103,17 @@ public final class ConfigLoader {
         return config;
     }
 
-    public void persist(Path configDirectory, ModConfig config) {
+    public void persist(Path configDirectory, ModConfig config) throws ConfigPersistenceException {
         Path configPath = configDirectory.resolve(ConfigConstants.CONFIG_FILE_NAME);
-        writeConfig(configPath, config);
+        try {
+            writeConfig(configPath, config);
+        } catch (IOException exception) {
+            throw new ConfigPersistenceException("Failed to save configuration to " + configPath, exception);
+        }
         holder.set(config);
     }
 
-    public void writeConfig(Path configPath, ModConfig config) {
+    private void writeConfig(Path configPath, ModConfig config) throws IOException {
         Path tempPath = configPath.resolveSibling(configPath.getFileName() + ".tmp");
 
         try {
@@ -109,14 +122,19 @@ public final class ConfigLoader {
                 GSON.toJson(config, writer);
             }
 
-            Files.move(tempPath, configPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            try {
+                Files.move(tempPath, configPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException exception) {
+                Files.move(tempPath, configPath, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (IOException exception) {
-            LOGGER.error("Failed to write configuration to {}", configPath, exception);
             try {
                 Files.deleteIfExists(tempPath);
             } catch (IOException cleanupException) {
-                LOGGER.debug("Failed to delete temporary configuration file {}", tempPath, cleanupException);
+                exception.addSuppressed(cleanupException);
             }
+
+            throw exception;
         }
     }
 
