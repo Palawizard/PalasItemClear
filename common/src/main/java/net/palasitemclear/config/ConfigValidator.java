@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.resources.ResourceLocation;
 
 public final class ConfigValidator {
     private ConfigValidator() {
@@ -112,8 +113,8 @@ public final class ConfigValidator {
             }
 
             String[] parts = value.split(":", 2);
-            if (parts[0].isBlank() || parts[1].isBlank()) {
-                throw new ConfigValidationException(fieldName + " entry must use namespace:id format: " + value);
+            if (parts[0].isBlank() || parts[1].isBlank() || ResourceLocation.tryParse(value) == null) {
+                throw new ConfigValidationException(fieldName + " contains an invalid resource ID: " + value);
             }
         }
     }

@@ -96,6 +96,19 @@ final class ConfigValidatorTest {
     }
 
     @Test
+    void rejectsMalformedResourceIds() {
+        ModConfig invalid = new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                new FiltersConfig(List.of("Minecraft:Diamond"), List.of(), 0, false, false),
+                BinConfig.defaults()
+        );
+
+        assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(invalid));
+    }
+
+    @Test
     void normalizesInvalidBinRetention() throws ConfigValidationException {
         ModConfig config = ConfigValidator.validate(new ModConfig(
                 1,
