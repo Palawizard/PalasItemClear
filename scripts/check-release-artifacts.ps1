@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
-    [string[]]$OnlyBands
+    [string[]]$OnlyBands,
+    # When set, verify already-built JARs found (recursively) under this directory
+    # instead of the per-band build/libs output. Used by CI to check downloaded artifacts.
+    [string]$ArtifactsRoot
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,6 +17,11 @@ function Get-ReleaseJar {
         [string]$Directory,
         [string]$Pattern
     )
+
+    if ($ArtifactsRoot) {
+        return @(Get-ChildItem -LiteralPath $ArtifactsRoot -Recurse -Filter $Pattern -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -notmatch '-(sources|dev-shadow)\.jar$' })
+    }
 
     $libs = Join-Path $projectRoot $Directory
     return @(Get-ChildItem -LiteralPath $libs -Filter $Pattern -File -ErrorAction SilentlyContinue |
@@ -52,7 +60,7 @@ function Assert-ReleaseJar {
     Write-Host "$Label artifact verified: $($jar.Name) ($($jar.Length) bytes)"
 }
 
-if (-not $SkipBuild) {
+if (-not $SkipBuild -and -not $ArtifactsRoot) {
   & (Join-Path $projectRoot 'scripts\build-all-version-bands.ps1') -SkipSmoke
   if ($LASTEXITCODE -ne 0) {
     throw 'Version-band build failed before artifact verification.'
@@ -84,7 +92,9 @@ foreach ($band in $matrix.bands) {
             $metadata = switch ($loaderName) {
                 'fabric' { 'fabric.mod.json' }
                 'neoforge' {
-                    if ($band.id -eq '1.20.1') { 'META-INF/mods.toml' } else { 'META-INF/neoforge.mods.toml' }
+                    # NeoForge only adopted neoforge.mods.toml in 20.5; 1.20.1 (legacy) and
+                    # 1.20.4 (20.4) still ship META-INF/mods.toml.
+                    if ($band.id -in @('1.20.1', '1.20.2-1.20.4')) { 'META-INF/mods.toml' } else { 'META-INF/neoforge.mods.toml' }
                 }
                 default { 'META-INF/mods.toml' }
             }
