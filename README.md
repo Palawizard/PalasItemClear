@@ -20,6 +20,7 @@
 
 ### Clearing
 
+- Reduces server lag caused by accumulating dropped items, like a modern ClearLag alternative
 - Removes only dropped item entities, on the server thread, across loaded server levels
 - Configurable interval with a five-minute default
 - Item, dimension, age, custom-name, and player-ownership filters
@@ -104,22 +105,26 @@ The full matrix, Java requirements, companion mods, and porting policy live in [
 
 ```text
 palasitemclear/
-|-- common/                Shared scheduling, filters, config, messages, commands, and bin
-|-- forge/  fabric/        Canonical 1.20.1 Architectury loader entry points
-|-- versions/              Standalone Fabric, Forge, and NeoForge projects per version band
-|   `-- version-matrix.json  Compatibility bands and metadata ranges
-|-- scripts/               Build, real-server smoke, and release-artifact tooling
-`-- .github/workflows/     CI matrix build, smoke, and tagged release automation
+├── common/     Shared clearing, scheduling, filters, config, messages, commands, and bin
+├── forge/      Forge entry point for the 1.20.1 line
+├── fabric/     Fabric entry point for the 1.20.1 line
+├── versions/   Standalone Forge, Fabric, and NeoForge projects, one per version band
+├── scripts/    Build, real-server smoke, and release-artifact tooling
+└── .github/    CI matrix build, smoke, and tagged-release automation
 ```
+
+The `common` module owns all behavior; loader modules only adapt lifecycle events,
+commands, and server access. `versions/version-matrix.json` defines the compatibility
+bands and metadata ranges shared by the build, smoke, and release tooling.
 
 ### Clearing flow
 
 ```text
-Server tick -> scheduler countdown -> warnings (60/30/5s)
-            -> clear dropped items (filtered) -> recovery bin (timed retention)
+server tick  →  scheduler countdown  →  warnings at 60s, 30s, 5s
+                                     →  clear dropped items (filtered)  →  recovery bin (timed retention)
 ```
 
-All clearing runs on the server thread and only iterates loaded server levels.
+Every clear runs on the server thread and only iterates loaded server levels.
 
 ---
 
