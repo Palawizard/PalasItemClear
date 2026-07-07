@@ -45,7 +45,13 @@ public final class RecoveryBinMenu {
         int totalPages = RecoveryBinPagination.pageCount(allEntries.size());
         int safePage = Math.min(Math.max(page, 0), totalPages - 1);
         List<RecoveryBinEntry> pageEntries = RecoveryBinPagination.slice(allEntries, safePage);
-        RecoveryBinContainer container = new RecoveryBinContainer(store, pageEntries, safePage, totalPages);
+        RecoveryBinContainer container = new RecoveryBinContainer(
+                store,
+                pageEntries,
+                safePage,
+                totalPages,
+                server::getTickCount
+        );
 
         MenuProvider provider = new MenuProvider() {
             @Override

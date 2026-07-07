@@ -2,6 +2,7 @@ package net.palasitemclear.bin;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.LongSupplier;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
@@ -13,22 +14,25 @@ import net.minecraft.world.item.Items;
  */
 public final class RecoveryBinContainer extends SimpleContainer {
     private final RecoveryBinStore store;
+    private final LongSupplier currentTick;
     private final int[] entryIds;
 
     public RecoveryBinContainer(
             RecoveryBinStore store,
             List<RecoveryBinEntry> pageEntries,
             int page,
-            int totalPages
+            int totalPages,
+            LongSupplier currentTick
     ) {
         super(RecoveryBinPagination.CONTAINER_SIZE);
         this.store = store;
+        this.currentTick = currentTick;
         this.entryIds = new int[RecoveryBinPagination.CONTAINER_SIZE];
         Arrays.fill(entryIds, -1);
 
         for (int slot = 0; slot < pageEntries.size() && slot < RecoveryBinPagination.ITEMS_PER_PAGE; slot++) {
             RecoveryBinEntry entry = pageEntries.get(slot);
-            setItem(slot, entry.stack().copy());
+            super.setItem(slot, entry.stack().copy());
             entryIds[slot] = entry.id();
         }
 
@@ -59,27 +63,12 @@ public final class RecoveryBinContainer extends SimpleContainer {
     }
 
     @Override
-    public void setItem(int slot, ItemStack stack) {
-        if (RecoveryBinPagination.isNavigationSlot(slot)) {
-            return;
-        }
-
-        if (stack.isEmpty()) {
-            removeTrackedEntry(slot);
-        }
-
-        super.setItem(slot, stack);
-    }
-
-    @Override
     public ItemStack removeItem(int slot, int amount) {
         if (RecoveryBinPagination.isNavigationSlot(slot)) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack removed = super.removeItem(slot, amount);
-        syncSlotToStore(slot);
-        return removed;
+        return takeTrackedItem(slot, amount);
     }
 
     @Override
@@ -88,9 +77,7 @@ public final class RecoveryBinContainer extends SimpleContainer {
             return ItemStack.EMPTY;
         }
 
-        ItemStack removed = super.removeItemNoUpdate(slot);
-        syncSlotToStore(slot);
-        return removed;
+        return takeTrackedItem(slot, getItem(slot).getCount());
     }
 
     @Override
@@ -98,24 +85,25 @@ public final class RecoveryBinContainer extends SimpleContainer {
         return true;
     }
 
-    private void syncSlotToStore(int slot) {
-        if (entryIds[slot] < 0) {
-            return;
-        }
-
-        ItemStack remaining = getItem(slot);
-        if (remaining.isEmpty()) {
-            removeTrackedEntry(slot);
-            return;
-        }
-
-        store.updateStack(entryIds[slot], remaining);
+    @Override
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        return false;
     }
 
-    private void removeTrackedEntry(int slot) {
-        if (entryIds[slot] >= 0) {
-            store.removeById(entryIds[slot]);
-            entryIds[slot] = -1;
+    private ItemStack takeTrackedItem(int slot, int amount) {
+        if (entryIds[slot] < 0) {
+            return ItemStack.EMPTY;
         }
+
+        ItemStack taken = store.takeById(entryIds[slot], amount, currentTick.getAsLong());
+        RecoveryBinEntry remaining = store.findById(entryIds[slot]);
+        if (remaining == null) {
+            super.setItem(slot, ItemStack.EMPTY);
+            entryIds[slot] = -1;
+        } else {
+            super.setItem(slot, remaining.stack().copy());
+        }
+
+        return taken;
     }
 }

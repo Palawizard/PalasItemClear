@@ -147,21 +147,29 @@ public final class RecoveryBinStore {
         return entries.stream().anyMatch(entry -> entry.matchesOwnerName(playerName));
     }
 
-    void removeById(int id) {
-        entries.removeIf(entry -> entry.id() == id);
-    }
+    ItemStack takeById(int id, int amount, long currentTick) {
+        if (amount <= 0) {
+            return ItemStack.EMPTY;
+        }
 
-    void updateStack(int id, ItemStack stack) {
+        evictExpired(currentTick);
         for (RecoveryBinEntry entry : entries) {
             if (entry.id() == id) {
-                entry.setStack(stack);
-                if (stack.isEmpty()) {
+                ItemStack taken = entry.stack().copy();
+                taken.setCount(Math.min(amount, entry.stack().getCount()));
+                ItemStack remaining = entry.stack().copy();
+                remaining.shrink(taken.getCount());
+                if (remaining.isEmpty()) {
                     entries.remove(entry);
+                } else {
+                    entry.setStack(remaining);
                 }
 
-                return;
+                return taken;
             }
         }
+
+        return ItemStack.EMPTY;
     }
 
     RecoveryBinEntry findById(int id) {
@@ -184,5 +192,11 @@ public final class RecoveryBinStore {
 
     void seedEntry(UUID ownerUuid, String ownerName, long expiresAtTick) {
         entries.add(RecoveryBinEntry.testEntry(nextId++, ownerUuid, ownerName, expiresAtTick));
+    }
+
+    int seedStack(ItemStack stack, long expiresAtTick) {
+        int id = nextId++;
+        entries.add(new RecoveryBinEntry(id, stack, null, null, expiresAtTick));
+        return id;
     }
 }
