@@ -1,0 +1,81 @@
+def tier = findProperty('filter_tier') ?: 'legacy'
+def isComponentsTier = (tier == 'components' || tier == 'components-legacy-rl')
+def usesOverrides26 = (tier == 'modern' || tier == 'premodern')
+def nullThrower = (findProperty('null_thrower') ?: 'false').toBoolean()
+
+if (tier == 'modern') {
+    apply from: rootProject.file('../shared/modern-source-filters.gradle')
+} else if (tier == 'premodern') {
+    apply from: rootProject.file('../shared/premodern-source-filters.gradle')
+} else if (isComponentsTier) {
+    apply from: rootProject.file('../shared/components-source-filters.gradle')
+} else if (tier == 'components-2') {
+    apply from: rootProject.file('../shared/components2-source-filters.gradle')
+}
+
+def sharedMainExcludes = [
+        'net/palasitemclear/PalasItemClear.java',
+        'net/palasitemclear/PlatformPaths.java',
+        'net/palasitemclear/command/PalasItemClearCommands.java',
+]
+if (usesOverrides26) {
+    sharedMainExcludes.add('net/palasitemclear/clear/DroppedItemClearer.java')
+}
+
+def syncSharedMain = tasks.register('syncSharedMain', Sync) {
+    from rootProject.file('../../common/src/main/java')
+    sharedMainExcludes.each { exclude it }
+    if (tier == 'modern') {
+        filter { line -> modernizeSharedSourceLine(line) }
+    } else if (tier == 'premodern') {
+        filter { line -> premodernizeSharedSourceLine(line) }
+    } else if (isComponentsTier) {
+        filter { line -> componentizeSharedSourceLine(line) }
+    } else if (tier == 'components-2') {
+        filter { line -> componentize2SharedSourceLine(line) }
+    }
+    if (nullThrower) {
+        filter { line -> line.replace('                item.thrower', '                null') }
+    }
+    into layout.buildDirectory.dir('generated/shared-main')
+}
+
+def syncSharedTest = tasks.register('syncSharedTest', Sync) {
+    from rootProject.file('../../common/src/test/java')
+    if (tier == 'modern') {
+        exclude '**/DroppedItemClearerTest.java'
+        filter { line -> modernizeSharedTestLine(line) }
+    } else if (tier == 'premodern') {
+        exclude '**/DroppedItemClearerTest.java'
+        filter { line -> premodernizeSharedTestLine(line) }
+    } else if (tier == 'components') {
+        filter { line -> componentizeSharedTestLine(line) }
+    } else if (tier == 'components-2') {
+        filter { line -> componentize2SharedTestLine(line) }
+    }
+    into layout.buildDirectory.dir('generated/shared-test')
+}
+
+ext.configureSharedSourceSets = { Closure extraMain = null ->
+    sourceSets {
+        main {
+            java.srcDir syncSharedMain
+            if (usesOverrides26) {
+                java.srcDir rootProject.file('../shared/overrides-26.2')
+            }
+            resources.srcDir rootProject.file('../../common/src/main/resources')
+            resources.exclude 'architectury.common.json'
+            if (!rootProject.name.endsWith('-fabric')) {
+                resources.exclude 'palasitemclear.accesswidener'
+            }
+            if (extraMain != null) {
+                extraMain.delegate = delegate
+                extraMain.resolveStrategy = Closure.DELEGATE_FIRST
+                extraMain.call()
+            }
+        }
+        test {
+            java.srcDir syncSharedTest
+        }
+    }
+}

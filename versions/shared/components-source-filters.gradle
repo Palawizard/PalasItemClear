@@ -1,0 +1,14 @@
+ext.componentizeSharedSourceLine = { String line ->
+    line
+            .replace('ItemStack.isSameItemSameTags(entry.stack(), remaining)',
+                    'ItemStack.isSameItemSameComponents(entry.stack(), remaining)')
+            .replace('item.getItem().hasCustomHoverName()',
+                    'item.getItem().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)')
+            .replace('stack.setHoverName(Component.literal(label));',
+                    'stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(label));')
+}
+
+ext.componentizeSharedTestLine = { String line ->
+    line.replace('new ResourceLocation("minecraft", "overworld")',
+            'ResourceLocation.fromNamespaceAndPath("minecraft", "overworld")')
+}

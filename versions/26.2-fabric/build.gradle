@@ -1,0 +1,109 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+    id 'java-library'
+}
+
+apply from: '../shared/modern-source-filters.gradle'
+
+version = mod_version
+group = maven_group
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-fabric"
+}
+
+def syncSharedMain = tasks.register('syncSharedMain', Sync) {
+    from '../../common/src/main/java'
+    exclude 'net/palasitemclear/PalasItemClear.java'
+    exclude 'net/palasitemclear/PlatformPaths.java'
+    exclude 'net/palasitemclear/command/PalasItemClearCommands.java'
+    exclude 'net/palasitemclear/clear/DroppedItemClearer.java'
+    filter { line -> modernizeSharedSourceLine(line) }
+    into layout.buildDirectory.dir('generated/shared-main')
+}
+
+def syncSharedTest = tasks.register('syncSharedTest', Sync) {
+    from '../../common/src/test/java'
+    exclude '**/DroppedItemClearerTest.java'
+    filter { line -> modernizeSharedTestLine(line) }
+    into layout.buildDirectory.dir('generated/shared-test')
+}
+
+sourceSets {
+    main {
+        java.srcDir syncSharedMain
+        java.srcDir 'src/main/java'
+        java.srcDir '../shared/overrides-26.2'
+        resources.srcDir '../../common/src/main/resources'
+        resources.srcDir 'src/main/resources'
+        resources.exclude 'architectury.common.json'
+        resources.exclude 'palasitemclear.accesswidener'
+    }
+    test {
+        java.srcDir syncSharedTest
+    }
+}
+
+loom {
+    mods {
+        palasitemclear {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.named('compileTestJava') {
+    enabled = false
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand version: project.version
+    }
+}

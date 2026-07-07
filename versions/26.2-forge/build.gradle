@@ -1,0 +1,119 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
+}
+
+apply from: '../shared/modern-source-filters.gradle'
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-forge"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+def syncSharedMain = tasks.register('syncSharedMain', Sync) {
+    from '../../common/src/main/java'
+    exclude 'net/palasitemclear/PalasItemClear.java'
+    exclude 'net/palasitemclear/PlatformPaths.java'
+    exclude 'net/palasitemclear/command/PalasItemClearCommands.java'
+    exclude 'net/palasitemclear/clear/DroppedItemClearer.java'
+    filter { line -> modernizeSharedSourceLine(line) }
+    into layout.buildDirectory.dir('generated/shared-main')
+}
+
+def syncSharedTest = tasks.register('syncSharedTest', Sync) {
+    from '../../common/src/test/java'
+    exclude '**/DroppedItemClearerTest.java'
+    filter { line -> modernizeSharedTestLine(line) }
+    into layout.buildDirectory.dir('generated/shared-test')
+}
+
+sourceSets {
+    main {
+        java.srcDir syncSharedMain
+        java.srcDir 'src/main/java'
+        java.srcDir '../shared/overrides-26.2'
+        resources.srcDir '../../common/src/main/resources'
+        resources.srcDir 'src/main/resources'
+        resources.exclude 'architectury.common.json'
+        resources.exclude 'palasitemclear.accesswidener'
+    }
+    test {
+        java.srcDir syncSharedTest
+    }
+}
+
+minecraft {
+    runs {
+        configureEach {
+            workingDir = layout.projectDirectory.dir('run')
+        }
+
+        server {
+            args '--nogui'
+        }
+    }
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.named('compileTestJava') {
+    enabled = false
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    def replacements = [
+            mod_id     : mod_id,
+            mod_name   : mod_name,
+            mod_version: mod_version,
+            mod_license: mod_license,
+            minecraft_version: minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            forge_version: forge_version
+    ]
+    inputs.properties replacements
+    filesMatching('META-INF/mods.toml') {
+        expand replacements
+    }
+}

@@ -1,0 +1,93 @@
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '[7.0.17,8)'
+}
+
+apply from: '../shared/sync-shared-sources.gradle'
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "palas-item-clear-${minecraft_version}-forge"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_release.toInteger())
+
+configureSharedSourceSets {
+    java.srcDir 'src/main/java'
+    resources.srcDir 'src/main/resources'
+}
+
+minecraft {
+    runs {
+        configureEach {
+            workingDir = layout.projectDirectory.dir('run')
+        }
+
+        server {
+            args '--nogui'
+        }
+    }
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = project.java_release.toInteger()
+}
+
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.named('compileTestJava') {
+    enabled = false
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(Jar).configureEach {
+    manifest {
+        attributes(
+                'Implementation-Title': 'palas-item-clear',
+                'Implementation-Version': project.version,
+                'Minecraft-Version': minecraft_version
+        )
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    def replacements = [
+            mod_id                  : mod_id,
+            mod_name                : mod_name,
+            mod_version             : mod_version,
+            mod_license             : mod_license,
+            minecraft_version       : minecraft_version,
+            minecraft_version_range : minecraft_version_range,
+            forge_version           : forge_version,
+            loader_version_range    : loader_version_range
+    ]
+    inputs.properties replacements
+    filesMatching('META-INF/mods.toml') {
+        expand replacements
+    }
+}

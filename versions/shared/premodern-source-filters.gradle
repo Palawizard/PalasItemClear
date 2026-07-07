@@ -1,0 +1,20 @@
+ext.premodernizeSharedSourceLine = { String line ->
+    line
+            .replace('import net.minecraft.resources.ResourceLocation;', 'import net.minecraft.resources.Identifier;')
+            .replace('ResourceLocation', 'Identifier')
+            .replace('new Identifier("minecraft", "overworld")', 'Identifier.fromNamespaceAndPath("minecraft", "overworld")')
+            .replace('ItemStack.isSameItemSameTags', 'ItemStack.isSameItemSameComponents')
+            .replace('item.getItem().hasCustomHoverName()', 'item.getItem().has(net.minecraft.core.component.DataComponents.CUSTOM_NAME)')
+            .replace('stack.setHoverName(Component.literal(label));',
+                    'stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.literal(label));')
+            .replace('.getGameProfile().getName()', '.getGameProfile().name()')
+            .replace('profile.getName()', 'profile.name()')
+            .replace('level.dimension().location()', 'level.dimension().identifier()')
+            .replace('player.serverLevel().getServer()', 'player.level().getServer()')
+}
+
+ext.premodernizeSharedTestLine = { String line ->
+    premodernizeSharedSourceLine(line)
+            .replace('new ItemStack(Items.DIAMOND, 8)', 'Items.DIAMOND.getDefaultInstance().copyWithCount(8)')
+            .replace('new ItemStack(Items.COBBLESTONE)', 'Items.COBBLESTONE.getDefaultInstance()')
+}

@@ -12,7 +12,7 @@ foreach ($loader in @('forge', 'fabric')) {
     $stderrFile = Join-Path $runDirectory 'smoke-test.stderr.log'
     $stdinFile = Join-Path $runDirectory 'smoke-test.stdin.txt'
     New-Item -ItemType Directory -Path $runDirectory -Force | Out-Null
-    Set-Content -LiteralPath (Join-Path $runDirectory 'eula.txt') -Value 'eula=true' -Encoding utf8
+    [System.IO.File]::WriteAllText((Join-Path $runDirectory 'eula.txt'), "eula=true`r`n", [System.Text.Encoding]::ASCII)
     [System.IO.File]::WriteAllText($stdinFile, "stop`r`n", [System.Text.Encoding]::ASCII)
     Remove-Item -LiteralPath $logFile, $stdoutFile, $stderrFile -Force -ErrorAction SilentlyContinue
 
