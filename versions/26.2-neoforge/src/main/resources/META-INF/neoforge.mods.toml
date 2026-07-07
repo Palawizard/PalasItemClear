@@ -11,6 +11,8 @@ description = '''
 Automatically removes dropped items after configurable warnings.
 '''
 
+displayTest = "IGNORE_SERVER_VERSION"
+
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
