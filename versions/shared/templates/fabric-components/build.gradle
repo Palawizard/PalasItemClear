@@ -87,8 +87,8 @@ tasks.withType(Jar).configureEach {
 processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     inputs.property 'version', project.version
-    inputs.property 'minecraft_version_range', project.minecraft_version_range
+    inputs.property 'fabric_minecraft_version_range', project.findProperty('fabric_minecraft_version_range') ?: project.minecraft_version_range
     filesMatching('fabric.mod.json') {
-        expand version: project.version, minecraft_version_range: project.minecraft_version_range
+        expand version: project.version, fabric_minecraft_version_range: project.fabric_minecraft_version_range
     }
 }

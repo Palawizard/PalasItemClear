@@ -27,13 +27,14 @@ function Invoke-GradleBuild {
 
     $previousJavaHome = $env:JAVA_HOME
     try {
-        if ($JavaVersion -eq 17) {
+        # Gradle 8.12 cannot run on Java 25; run the build on <=21 and let the toolchain
+        # compile the band's real release. Toolchain paths keep Java 25 discoverable.
+        $runJava = if ($JavaVersion -ge 25) { 21 } else { $JavaVersion }
+        if ($runJava -eq 17) {
             $candidates = @(
                 'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
                 'C:\Program Files\Eclipse Adoptium\jdk-17*'
             )
-        } elseif ($JavaVersion -ge 25) {
-            $candidates = @('C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot')
         } else {
             $candidates = @('C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot')
         }
@@ -51,11 +52,20 @@ function Invoke-GradleBuild {
             }
         }
 
+        $installPaths = @(
+            'C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot',
+            'C:\Program Files\Eclipse Adoptium\jdk-21.0.10.7-hotspot',
+            'C:\Program Files\Eclipse Adoptium\jdk-25.0.3.9-hotspot'
+        ) | Where-Object { Test-Path -LiteralPath $_ }
+        $toolchainArg = "-Dorg.gradle.java.installations.paths=$($installPaths -join ',')"
+
         Push-Location $WorkingDirectory
-        if (Test-Path '.\gradlew.bat') {
-            & .\gradlew.bat @ExtraArgs
+        if (Test-Path (Join-Path $WorkingDirectory 'gradlew.bat')) {
+            Push-Location $WorkingDirectory
+            & .\gradlew.bat @ExtraArgs $toolchainArg
         } else {
-            & (Join-Path $projectRoot 'gradlew.bat') -p $WorkingDirectory @ExtraArgs
+            Push-Location $projectRoot
+            & .\gradlew.bat -p $WorkingDirectory @ExtraArgs $toolchainArg
         }
         if ($LASTEXITCODE -ne 0) { throw "Gradle failed with exit code $LASTEXITCODE" }
     } finally {
@@ -101,21 +111,9 @@ foreach ($band in $matrix.bands) {
 }
 
 if (-not $SkipSmoke) {
-    try {
-        & (Join-Path $projectRoot 'scripts\smoke-test-servers.ps1')
-        if ($LASTEXITCODE -ne 0) { throw "smoke-test-servers failed" }
-        Add-Result -Band '1.20.1' -Loader 'smoke' -Status 'PASS' -Detail 'Forge/Fabric dedicated servers'
-    } catch {
-        Add-Result -Band '1.20.1' -Loader 'smoke' -Status 'FAIL' -Detail $_.Exception.Message
-    }
-
-    try {
-        & (Join-Path $projectRoot 'scripts\smoke-test-neoforge.ps1')
-        if ($LASTEXITCODE -ne 0) { throw "smoke-test-neoforge failed" }
-        Add-Result -Band '1.21-1.21.4' -Loader 'smoke' -Status 'PASS' -Detail 'NeoForge 1.21.1 dedicated server'
-    } catch {
-        Add-Result -Band '1.21-1.21.4' -Loader 'smoke' -Status 'FAIL' -Detail $_.Exception.Message
-    }
+    & (Join-Path $projectRoot 'scripts\smoke-test-all-version-bands.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'smoke-test-all-version-bands failed' }
+    Add-Result -Band 'all' -Loader 'smoke' -Status 'PASS' -Detail 'every supported band and loader'
 }
 
 Write-Host ''

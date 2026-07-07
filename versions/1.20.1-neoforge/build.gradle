@@ -76,7 +76,9 @@ tasks.named('processResources', ProcessResources).configure {
             mod_license            : mod_license
     ]
     inputs.properties replacements
-    filesMatching('META-INF/neoforge.mods.toml') {
+    // Legacy NeoForge for 1.20.1 reads META-INF/mods.toml; the pattern must match the
+    // actual file name or placeholders ship unexpanded and mod scanning crashes.
+    filesMatching('META-INF/mods.toml') {
         expand replacements
     }
 }

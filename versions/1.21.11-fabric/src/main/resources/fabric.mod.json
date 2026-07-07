@@ -7,7 +7,7 @@
   "authors": [
     "Palas"
   ],
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "environment": "server",
   "entrypoints": {
     "server": [
