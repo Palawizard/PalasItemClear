@@ -65,15 +65,21 @@ public final class DroppedItemClearer {
     }
 
     private static CapturedItem captureItem(ItemEntity item, MinecraftServer server) {
-        UUID ownerUuid = null;
+        UUID ownerUuid = resolveAttributionUuid(
+                item.getOwner() == null ? null : item.getOwner().getUUID(),
+                item.thrower
+        );
         String ownerName = null;
 
-        if (item.getOwner() != null) {
-            ownerUuid = item.getOwner().getUUID();
+        if (ownerUuid != null) {
             ownerName = resolveOwnerName(server, ownerUuid);
         }
 
         return new CapturedItem(item.getItem(), ownerUuid, ownerName);
+    }
+
+    static UUID resolveAttributionUuid(UUID ownerUuid, UUID throwerUuid) {
+        return ownerUuid != null ? ownerUuid : throwerUuid;
     }
 
     private static String resolveOwnerName(MinecraftServer server, UUID ownerUuid) {
