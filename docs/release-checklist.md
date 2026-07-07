@@ -1,6 +1,7 @@
 # Release checklist
 
 1. Move the pending `CHANGELOG.md` entries under the new version and date.
+2. Write the release notes at `.github/release-notes/v<version>.md` (the release job requires this file and uses it as the release body).
 2. Confirm the working tree is clean on the release branch.
 3. Run full verification:
    ```powershell
