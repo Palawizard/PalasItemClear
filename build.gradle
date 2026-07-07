@@ -55,4 +55,19 @@ allprojects {
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
     }
+
+    tasks.withType(AbstractArchiveTask).configureEach {
+        preserveFileTimestamps = false
+        reproducibleFileOrder = true
+    }
+
+    tasks.withType(Jar).configureEach {
+        manifest {
+            attributes(
+                    "Implementation-Title": rootProject.archives_base_name,
+                    "Implementation-Version": project.version,
+                    "Minecraft-Version": rootProject.minecraft_version
+            )
+        }
+    }
 }
