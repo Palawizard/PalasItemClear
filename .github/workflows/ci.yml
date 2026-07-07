@@ -223,7 +223,11 @@ jobs:
           pattern: palas-item-clear-*
           merge-multiple: true
 
+      # Some artifacts keep a nested path (e.g. the root line's fabric/forge libs), so
+      # collect every JAR recursively rather than with a shallow glob.
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release/*.jar --generate-notes --verify-tag
+        run: |
+          jars=$(find release -name '*.jar')
+          gh release create "$GITHUB_REF_NAME" $jars --generate-notes --verify-tag
