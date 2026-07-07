@@ -198,7 +198,13 @@ public final class ServerClearController {
     }
 
     private void applySchedule(ModConfig config) {
+        ClearScheduler.State previousState = scheduler.state();
         scheduler = new ClearScheduler(config.intervalTicks());
+        if (previousState == ClearScheduler.State.PAUSED) {
+            scheduler.pause();
+        } else if (previousState == ClearScheduler.State.STOPPED) {
+            scheduler.stop();
+        }
     }
 
     private void checkWarnings(MinecraftServer activeServer, long remainingTicks) {
