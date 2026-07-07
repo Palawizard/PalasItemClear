@@ -20,7 +20,7 @@
       "java": 17,
       "template": "neoforge-1.21",
       "loaders": {
-        "neoforge": { "path": "versions/1.20.4-neoforge", "neoVersion": "20.4.237", "artifact": "palas-item-clear-1.20.4-neoforge" },
+        "neoforge": { "path": "versions/1.20.4-neoforge", "neoVersion": "20.4.246", "artifact": "palas-item-clear-1.20.4-neoforge" },
         "fabric": { "path": "versions/1.20.4-fabric", "loaderVersion": "0.16.9", "loomVersion": "1.10.455", "fabricApi": "0.97.3+1.20.4", "yarnMappings": "1.20.4+build.3", "artifact": "palas-item-clear-1.20.4-fabric" },
         "forge": { "path": "versions/1.20.4-forge", "forgeVersion": "49.1.0", "loaderVersionRange": "[49,)", "artifact": "palas-item-clear-1.20.4-forge" }
       }

@@ -19,6 +19,11 @@ configureSharedSourceSets {
     resources.srcDir 'src/main/resources'
 }
 
+// ForgeGradle userdev scans classes and resources output roots separately; when they
+// differ, the resources root is treated as a phantom mod file with no @Mod class and
+// aborts loading. Emitting resources into the classes dir keeps a single mod root.
+sourceSets.main.output.resourcesDir = sourceSets.main.java.classesDirectory
+
 minecraft {
     mappings channel: 'official', version: minecraft_version
 

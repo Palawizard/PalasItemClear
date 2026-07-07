@@ -280,7 +280,7 @@ mod_id=palasitemclear
 mod_name=Palas Item Clear
 mod_version=0.1.0
 mod_group_id=net.palasitemclear
-mod_license=All Rights Reserved
+mod_license=MIT
 "@
         Write-Utf8NoBom -Path (Join-Path $target 'gradle.properties') -Content $props
         Copy-LoaderSources -TargetDir $target -LoaderName 'neoforge' -LegacyTick $legacyTick -NeoTier $neoTier -FilterTier $filterTier
@@ -341,7 +341,7 @@ mod_version=0.1.0
 mod_group_id=net.palasitemclear
 mod_id=palasitemclear
 mod_name=Palas Item Clear
-mod_license=All Rights Reserved
+mod_license=MIT
 "@
         Write-Utf8NoBom -Path (Join-Path $target 'gradle.properties') -Content $props
         Copy-LoaderSources -TargetDir $target -LoaderName 'forge' -FilterTier $filterTier

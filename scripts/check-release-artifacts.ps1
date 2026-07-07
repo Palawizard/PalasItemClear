@@ -1,71 +1,99 @@
 [CmdletBinding()]
 param(
     [switch]$SkipBuild,
-    [switch]$IncludeNeoForge,
-    [switch]$NeoForgeOnly
+    [string[]]$OnlyBands
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
+$matrixPath = Join-Path $projectRoot 'versions\version-matrix.json'
+$matrix = Get-Content -LiteralPath $matrixPath -Raw | ConvertFrom-Json
 
-if (-not $SkipBuild) {
-    & (Join-Path $projectRoot 'gradlew.bat') clean build
-    if ($LASTEXITCODE -ne 0) {
-        throw "Gradle build failed with exit code $LASTEXITCODE."
-    }
-}
+function Get-ReleaseJar {
+    param(
+        [string]$Directory,
+        [string]$Pattern
+    )
 
-$expected = if ($NeoForgeOnly) { @() } else { @(
-    @{
-        Loader = 'fabric'
-        Directory = 'fabric\build\libs'
-        Pattern = 'palas-item-clear-1.20.1-fabric-*.jar'
-        Metadata = 'fabric.mod.json'
-    },
-    @{
-        Loader = 'forge'
-        Directory = 'forge\build\libs'
-        Pattern = 'palas-item-clear-1.20.1-forge-*.jar'
-        Metadata = 'META-INF/mods.toml'
-    }
-) }
-
-if ($IncludeNeoForge -or $NeoForgeOnly) {
-    $expected += @{
-        Loader = 'neoforge'
-        Directory = 'versions\1.21.1-neoforge\build\libs'
-        Pattern = 'palas-item-clear-1.21.1-neoforge-*.jar'
-        Metadata = 'META-INF/neoforge.mods.toml'
-    }
-}
-
-foreach ($artifact in $expected) {
-    $libs = Join-Path $projectRoot $artifact.Directory
-    $jars = @(Get-ChildItem -LiteralPath $libs -Filter $artifact.Pattern -File |
+    $libs = Join-Path $projectRoot $Directory
+    return @(Get-ChildItem -LiteralPath $libs -Filter $Pattern -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -notmatch '-(sources|dev-shadow)\.jar$' })
+}
 
+function Assert-ReleaseJar {
+    param(
+        [string]$Label,
+        [string]$Directory,
+        [string]$Pattern,
+        [string[]]$RequiredEntries
+    )
+
+    $jars = Get-ReleaseJar -Directory $Directory -Pattern $Pattern
     if ($jars.Count -ne 1) {
-        throw "Expected one release JAR for $($artifact.Loader), found $($jars.Count)."
+        throw "Expected one release JAR for $Label in $Directory ($Pattern), found $($jars.Count)."
     }
 
-    $entries = & jar tf $jars[0].FullName
+    $jar = $jars[0]
+    $entries = & jar tf $jar.FullName
     if ($LASTEXITCODE -ne 0) {
-        throw "Could not inspect $($jars[0].FullName)."
+        throw "Could not inspect $($jar.FullName)."
     }
 
-    foreach ($requiredEntry in @(
-        $artifact.Metadata,
-        'net/palasitemclear/PalasItemClear.class',
-        'net/palasitemclear/server/ServerClearController.class'
-    )) {
+    foreach ($requiredEntry in $RequiredEntries) {
         if ($entries -notcontains $requiredEntry) {
-            throw "$($jars[0].Name) is missing $requiredEntry."
+            throw "$($jar.Name) is missing $requiredEntry."
         }
     }
 
-    if ($jars[0].Length -lt 10KB) {
-        throw "$($jars[0].Name) is unexpectedly small."
+    if ($jar.Length -lt 10KB) {
+        throw "$($jar.Name) is unexpectedly small."
     }
 
-    Write-Host "$($artifact.Loader) artifact verified: $($jars[0].Name) ($($jars[0].Length) bytes)"
+    Write-Host "$Label artifact verified: $($jar.Name) ($($jar.Length) bytes)"
+}
+
+if (-not $SkipBuild) {
+  & (Join-Path $projectRoot 'scripts\build-all-version-bands.ps1') -SkipSmoke
+  if ($LASTEXITCODE -ne 0) {
+    throw 'Version-band build failed before artifact verification.'
+  }
+}
+
+foreach ($band in $matrix.bands) {
+    if ($OnlyBands -and ($band.id -notin $OnlyBands)) { continue }
+
+    foreach ($loaderName in @('forge', 'fabric', 'neoforge')) {
+        $loader = $band.loaders.$loaderName
+        if (-not $loader) { continue }
+
+        $artifactBase = $loader.artifact
+        $modVersion = (Get-Content -LiteralPath (Join-Path $projectRoot 'gradle.properties') -Raw |
+            Select-String -Pattern 'mod_version=(.+)' -AllMatches).Matches[0].Groups[1].Value.Trim()
+
+        if ($loader.path -eq 'forge') {
+            $directory = 'forge\build\libs'
+            $pattern = "$artifactBase-$modVersion.jar"
+            $metadata = 'META-INF/mods.toml'
+        } elseif ($loader.path -eq 'fabric') {
+            $directory = 'fabric\build\libs'
+            $pattern = "$artifactBase-$modVersion.jar"
+            $metadata = 'fabric.mod.json'
+        } else {
+            $directory = ($loader.path -replace '/', '\') + '\build\libs'
+            $pattern = "$artifactBase-$modVersion.jar"
+            $metadata = switch ($loaderName) {
+                'fabric' { 'fabric.mod.json' }
+                'neoforge' {
+                    if ($band.id -eq '1.20.1') { 'META-INF/mods.toml' } else { 'META-INF/neoforge.mods.toml' }
+                }
+                default { 'META-INF/mods.toml' }
+            }
+        }
+
+        Assert-ReleaseJar -Label "$($band.id)/$loaderName" -Directory $directory -Pattern $pattern -RequiredEntries @(
+            $metadata,
+            'net/palasitemclear/PalasItemClear.class',
+            'net/palasitemclear/server/ServerClearController.class'
+        )
+    }
 }

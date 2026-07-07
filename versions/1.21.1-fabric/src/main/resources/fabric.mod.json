@@ -7,7 +7,7 @@
   "authors": [
     "Palas"
   ],
-  "license": "All-Rights-Reserved",
+  "license": "MIT",
   "environment": "server",
   "entrypoints": {
     "server": [
@@ -18,6 +18,6 @@
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric-api": "*",
-    "minecraft": "${minecraft_version_range}"
+    "minecraft": "${fabric_minecraft_version_range}"
   }
 }

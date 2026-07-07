@@ -52,10 +52,12 @@ function Invoke-GradleBuild {
         }
 
         Push-Location $WorkingDirectory
-        if (Test-Path '.\gradlew.bat') {
+        if (Test-Path (Join-Path $WorkingDirectory 'gradlew.bat')) {
+            Push-Location $WorkingDirectory
             & .\gradlew.bat @ExtraArgs
         } else {
-            & (Join-Path $projectRoot 'gradlew.bat') -p $WorkingDirectory @ExtraArgs
+            Push-Location $projectRoot
+            & .\gradlew.bat -p $WorkingDirectory @ExtraArgs
         }
         if ($LASTEXITCODE -ne 0) { throw "Gradle failed with exit code $LASTEXITCODE" }
     } finally {
@@ -101,21 +103,9 @@ foreach ($band in $matrix.bands) {
 }
 
 if (-not $SkipSmoke) {
-    try {
-        & (Join-Path $projectRoot 'scripts\smoke-test-servers.ps1')
-        if ($LASTEXITCODE -ne 0) { throw "smoke-test-servers failed" }
-        Add-Result -Band '1.20.1' -Loader 'smoke' -Status 'PASS' -Detail 'Forge/Fabric dedicated servers'
-    } catch {
-        Add-Result -Band '1.20.1' -Loader 'smoke' -Status 'FAIL' -Detail $_.Exception.Message
-    }
-
-    try {
-        & (Join-Path $projectRoot 'scripts\smoke-test-neoforge.ps1')
-        if ($LASTEXITCODE -ne 0) { throw "smoke-test-neoforge failed" }
-        Add-Result -Band '1.21-1.21.4' -Loader 'smoke' -Status 'PASS' -Detail 'NeoForge 1.21.1 dedicated server'
-    } catch {
-        Add-Result -Band '1.21-1.21.4' -Loader 'smoke' -Status 'FAIL' -Detail $_.Exception.Message
-    }
+    & (Join-Path $projectRoot 'scripts\smoke-test-all-version-bands.ps1')
+    if ($LASTEXITCODE -ne 0) { throw 'smoke-test-all-version-bands failed' }
+    Add-Result -Band 'all' -Loader 'smoke' -Status 'PASS' -Detail 'every supported band and loader'
 }
 
 Write-Host ''
