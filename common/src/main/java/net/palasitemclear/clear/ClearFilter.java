@@ -38,7 +38,7 @@ public final class ClearFilter {
             return false;
         }
 
-        if (excludeNamedItems && item.hasCustomName()) {
+        if (excludeNamedItems && isNamed(item.hasCustomName(), item.getItem().hasCustomHoverName())) {
             return false;
         }
 
@@ -47,6 +47,10 @@ public final class ClearFilter {
         }
 
         return true;
+    }
+
+    static boolean isNamed(boolean entityHasCustomName, boolean stackHasCustomName) {
+        return entityHasCustomName || stackHasCustomName;
     }
 
     private static Set<ResourceLocation> parseResourceLocations(Iterable<String> values) {
