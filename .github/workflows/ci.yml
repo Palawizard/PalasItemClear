@@ -216,6 +216,20 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
+      - name: Verify tag matches mod version
+        run: |
+          version=$(grep -E '^mod_version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match mod_version $version"; exit 1
+          fi
+
+      - name: Verify release notes exist
+        run: |
+          notes=".github/release-notes/${GITHUB_REF_NAME}.md"
+          if [ ! -f "$notes" ]; then
+            echo "Release notes file not found: $notes. Add it before tagging."; exit 1
+          fi
+
       - name: Download build artifacts
         uses: actions/download-artifact@v7
         with:
@@ -223,11 +237,12 @@ jobs:
           pattern: palas-item-clear-*
           merge-multiple: true
 
-      # Some artifacts keep a nested path (e.g. the root line's fabric/forge libs), so
-      # collect every JAR recursively rather than with a shallow glob.
-      - name: Publish release assets
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          jars=$(find release -name '*.jar')
-          gh release create "$GITHUB_REF_NAME" $jars --generate-notes --verify-tag
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Palas Item Clear - ${{ github.ref_name }}
+          body_path: .github/release-notes/${{ github.ref_name }}.md
+          files: release/**/*.jar
+          prerelease: false
+          fail_on_unmatched_files: true
