@@ -5,7 +5,9 @@ run/
 out/
 *.iml
 .gradle/
+.architectury-transformer/
 output/
+logs/
 bin/
 !common/src/main/java/net/palasitemclear/bin/
 !common/src/main/java/net/palasitemclear/bin/**
