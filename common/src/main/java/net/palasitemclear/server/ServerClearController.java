@@ -1,12 +1,16 @@
 package net.palasitemclear.server;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.palasitemclear.PalasItemClear;
 import net.palasitemclear.PlatformPaths;
+import net.palasitemclear.bin.CapturedItem;
+import net.palasitemclear.bin.RecoveryBinStore;
 import net.palasitemclear.clear.ClearFilter;
 import net.palasitemclear.clear.ClearResult;
 import net.palasitemclear.clear.DroppedItemClearer;
@@ -30,6 +34,7 @@ public final class ServerClearController {
     private final ConfigHolder configHolder;
     private final ConfigLoader configLoader;
     private final DroppedItemClearer clearer;
+    private final RecoveryBinStore recoveryBin = new RecoveryBinStore();
     private final Set<Long> firedWarnings = new HashSet<>();
     private ClearScheduler scheduler;
     private MinecraftServer server;
@@ -71,6 +76,8 @@ public final class ServerClearController {
             checkWarnings(activeServer, scheduler.remainingTicks());
         }
 
+        recoveryBin.evictExpired(activeServer.getTickCount());
+
         if (!scheduler.tick()) {
             return;
         }
@@ -100,7 +107,8 @@ public final class ServerClearController {
                 current.configVersion(),
                 new ScheduleConfig(intervalSeconds, current.schedule().warningSeconds()),
                 current.messages(),
-                current.filters()
+                current.filters(),
+                current.bin()
         ));
 
         configHolder.replace(updated);
@@ -110,6 +118,14 @@ public final class ServerClearController {
         if (server != null) {
             configLoader.persist(PlatformPaths.getConfigDirectory(), updated);
         }
+    }
+
+    public RecoveryBinStore recoveryBin() {
+        return recoveryBin;
+    }
+
+    public MinecraftServer server() {
+        return server;
     }
 
     public boolean isActive() {
@@ -122,7 +138,9 @@ public final class ServerClearController {
         try {
             ModConfig config = configHolder.get();
             ClearFilter filter = new ClearFilter(config.filters());
-            lastResult = clearer.clear(activeServer, filter);
+            List<CapturedItem> captured = new ArrayList<>();
+            lastResult = clearer.clear(activeServer, filter, captured);
+            recoveryBin.deposit(captured, activeServer.getTickCount(), config.bin().retentionTicks());
             broadcastClearMessage(activeServer, config, lastResult);
             LOGGER.info("Dropped item clear completed: removed={}, dimensions={}",
                     lastResult.totalRemoved(), lastResult.removedByDimension().size());
@@ -138,6 +156,7 @@ public final class ServerClearController {
 
         server = null;
         firedWarnings.clear();
+        recoveryBin.clear();
         scheduler.stop();
         ServerClearRegistry.unbind();
         LOGGER.info("Item clearing scheduler stopped");

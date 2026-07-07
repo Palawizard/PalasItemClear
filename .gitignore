@@ -7,6 +7,10 @@ out/
 .gradle/
 output/
 bin/
+!common/src/main/java/net/palasitemclear/bin/
+!common/src/main/java/net/palasitemclear/bin/**
+!common/src/test/java/net/palasitemclear/bin/
+!common/src/test/java/net/palasitemclear/bin/**
 libs/
 
 .classpath

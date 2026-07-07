@@ -7,14 +7,16 @@ public record ModConfig(
         int configVersion,
         ScheduleConfig schedule,
         MessagesConfig messages,
-        FiltersConfig filters
+        FiltersConfig filters,
+        BinConfig bin
 ) {
     public static ModConfig defaults() {
         return new ModConfig(
                 ConfigConstants.CURRENT_VERSION,
                 ScheduleConfig.defaults(),
                 MessagesConfig.defaults(),
-                FiltersConfig.defaults()
+                FiltersConfig.defaults(),
+                BinConfig.defaults()
         );
     }
 

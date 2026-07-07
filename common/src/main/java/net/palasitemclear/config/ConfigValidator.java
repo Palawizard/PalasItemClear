@@ -13,6 +13,7 @@ public final class ConfigValidator {
         ScheduleConfig schedule = raw.schedule() == null ? ScheduleConfig.defaults() : raw.schedule();
         MessagesConfig messages = raw.messages() == null ? MessagesConfig.defaults() : raw.messages();
         FiltersConfig filters = raw.filters() == null ? FiltersConfig.defaults() : raw.filters();
+        BinConfig bin = raw.bin() == null ? BinConfig.defaults() : raw.bin();
 
         int configVersion = raw.configVersion() <= 0 ? ConfigConstants.CURRENT_VERSION : raw.configVersion();
 
@@ -46,7 +47,8 @@ public final class ConfigValidator {
                         filters.minAgeTicks(),
                         filters.excludeNamedItems(),
                         filters.excludePlayerOwnedItems()
-                )
+                ),
+                new BinConfig(bin.retentionSeconds() <= 0 ? BinConfig.defaults().retentionSeconds() : bin.retentionSeconds())
         );
     }
 
@@ -91,6 +93,10 @@ public final class ConfigValidator {
 
         validateResourceIds(config.filters().excludedItems(), "filters.excludedItems");
         validateResourceIds(config.filters().excludedDimensions(), "filters.excludedDimensions");
+
+        if (config.bin().retentionSeconds() <= 0) {
+            throw new ConfigValidationException("bin.retentionSeconds must be positive");
+        }
 
         return config;
     }

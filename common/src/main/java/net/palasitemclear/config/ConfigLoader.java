@@ -86,7 +86,8 @@ public final class ConfigLoader {
                     ConfigConstants.CURRENT_VERSION,
                     config.schedule(),
                     config.messages(),
-                    config.filters()
+                    config.filters(),
+                    config.bin() == null ? BinConfig.defaults() : config.bin()
             );
         }
 

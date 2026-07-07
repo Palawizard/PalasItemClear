@@ -14,5 +14,8 @@
     "minAgeTicks": 0,
     "excludeNamedItems": false,
     "excludePlayerOwnedItems": false
+  },
+  "bin": {
+    "retentionSeconds": 120
   }
 }

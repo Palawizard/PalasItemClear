@@ -11,6 +11,7 @@ final class ClearAdminServiceTest {
         String help = ClearAdminService.help();
 
         assertTrue(help.contains("/palasitemclear status"));
+        assertTrue(help.contains("/palasitemclear bin"));
         assertTrue(help.contains("/palasitemclear set interval"));
     }
 

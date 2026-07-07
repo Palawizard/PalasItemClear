@@ -16,15 +16,17 @@ final class ConfigValidatorTest {
         assertEquals(List.of(60, 30, 5), config.schedule().warningSeconds());
         assertEquals(6000L, config.intervalTicks());
         assertEquals(List.of(1200L, 600L, 100L), config.warningTicksDescending());
+        assertEquals(120, config.bin().retentionSeconds());
     }
 
     @Test
     void normalizesMissingSections() throws ConfigValidationException {
-        ModConfig config = ConfigValidator.validate(new ModConfig(0, null, null, null));
+        ModConfig config = ConfigValidator.validate(new ModConfig(0, null, null, null, null));
 
         assertEquals(ConfigConstants.CURRENT_VERSION, config.configVersion());
         assertEquals(MessagesConfig.defaults().warning(), config.messages().warning());
         assertEquals(FiltersConfig.defaults().excludedItems(), config.filters().excludedItems());
+        assertEquals(BinConfig.defaults().retentionSeconds(), config.bin().retentionSeconds());
     }
 
     @Test
@@ -33,7 +35,8 @@ final class ConfigValidatorTest {
                 1,
                 new ScheduleConfig(300, List.of(300)),
                 MessagesConfig.defaults(),
-                FiltersConfig.defaults()
+                FiltersConfig.defaults(),
+                BinConfig.defaults()
         );
 
         ConfigValidationException exception = assertThrows(
@@ -49,7 +52,8 @@ final class ConfigValidatorTest {
                 1,
                 new ScheduleConfig(300, List.of(60, 60)),
                 MessagesConfig.defaults(),
-                FiltersConfig.defaults()
+                FiltersConfig.defaults(),
+                BinConfig.defaults()
         );
 
         assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(invalid));
@@ -61,7 +65,8 @@ final class ConfigValidatorTest {
                 1,
                 ScheduleConfig.defaults(),
                 MessagesConfig.defaults(),
-                new FiltersConfig(List.of(), List.of(), -1, false, false)
+                new FiltersConfig(List.of(), List.of(), -1, false, false),
+                BinConfig.defaults()
         );
 
         assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(invalid));
@@ -79,7 +84,8 @@ final class ConfigValidatorTest {
                         100,
                         true,
                         true
-                )
+                ),
+                BinConfig.defaults()
         ));
 
         assertEquals(List.of("minecraft:diamond"), config.filters().excludedItems());
@@ -87,5 +93,18 @@ final class ConfigValidatorTest {
         assertEquals(100, config.filters().minAgeTicks());
         assertTrue(config.filters().excludeNamedItems());
         assertTrue(config.filters().excludePlayerOwnedItems());
+    }
+
+    @Test
+    void normalizesInvalidBinRetention() throws ConfigValidationException {
+        ModConfig config = ConfigValidator.validate(new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                FiltersConfig.defaults(),
+                new BinConfig(0)
+        ));
+
+        assertEquals(BinConfig.defaults().retentionSeconds(), config.bin().retentionSeconds());
     }
 }

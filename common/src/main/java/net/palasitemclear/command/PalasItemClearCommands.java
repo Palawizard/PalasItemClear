@@ -2,6 +2,7 @@ package net.palasitemclear.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -10,6 +11,7 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.palasitemclear.PalasItemClear;
 import net.palasitemclear.config.ConfigValidationException;
 import net.palasitemclear.server.ServerClearController;
@@ -45,6 +47,28 @@ public final class PalasItemClearCommands {
                         ClearAdminService.nextClear(controller))))
                 .then(Commands.literal("clear").executes(context -> runWithController(context.getSource(), controller ->
                         ClearAdminService.clearNow(controller))))
+                .then(Commands.literal("bin")
+                        .executes(context -> runWithController(context.getSource(), controller ->
+                                ClearAdminService.openRecoveryBin(controller, context.getSource(), null)))
+                        .then(Commands.argument("player", StringArgumentType.string())
+                                .suggests((context, builder) -> {
+                                    ServerClearController controller = ServerClearRegistry.get();
+                                    for (ServerPlayer player : context.getSource().getServer().getPlayerList().getPlayers()) {
+                                        builder.suggest(player.getGameProfile().getName());
+                                    }
+
+                                    if (controller != null) {
+                                        controller.recoveryBin().knownOwnerNames().forEach(builder::suggest);
+                                    }
+
+                                    return builder.buildFuture();
+                                })
+                                .executes(context -> runWithController(context.getSource(), controller ->
+                                        ClearAdminService.openRecoveryBin(
+                                                controller,
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "player")
+                                        )))))
                 .then(Commands.literal("pause").executes(context -> runWithController(context.getSource(), controller ->
                         ClearAdminService.pause(controller))))
                 .then(Commands.literal("resume").executes(context -> runWithController(context.getSource(), controller ->
