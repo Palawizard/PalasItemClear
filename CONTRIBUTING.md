@@ -1,52 +1,32 @@
 # Contributing
 
-Thanks for helping improve Palas Item Clear.
-
-## Before you start
-
-- Read [README.md](README.md) and [docs/SUPPORT.md](docs/SUPPORT.md) for supported Minecraft bands and loader requirements.
-- Open an issue first for large changes so we can agree on scope.
-- Keep player-facing text, configuration defaults, and documentation in English.
-
 ## Development setup
 
-```powershell
-.\gradlew.bat build
-.\scripts\build-all-version-bands.ps1 -SkipSmoke
-```
-
-Run targeted checks while iterating:
-
-```powershell
-.\gradlew.bat :common:test
-.\scripts\prod-smoke.ps1 -BandId 1.20.1 -Loader forge
-```
-
-## Pull requests
-
-- Target the `dev` branch unless you are preparing a release merge into `main`.
-- Keep commits focused. Prefer the format `type(scope): thing done`.
-- Include automated verification results in the PR description.
-- Do not commit local-only directories such as `.cursor/`, `.vscode/`, or `.idea/`.
-
-## What to verify
-
-Before requesting review, run the checks that match your change:
+Palas Item Clear builds with the Gradle wrapper. Install JDK 17, 21, and 25 (for the Minecraft 1.20.x, 1.21.x, and 26.x lines). The build runs on Java 21 and compiles each band with the matching toolchain.
 
 ```powershell
 .\gradlew.bat clean build
 .\scripts\build-all-version-bands.ps1 -SkipSmoke
+```
+
+## Verification
+
+Run these checks before opening a pull request:
+
+```powershell
+.\gradlew.bat :common:test
+.\scripts\prod-smoke-all.ps1
 .\scripts\check-release-artifacts.ps1 -SkipBuild
 ```
 
-If you touch server lifecycle or loader adapters, also run the real-server smoke check:
+`prod-smoke-all.ps1` installs each loader's real dedicated server, drops the packaged JAR plus companions, and asserts the item clearing scheduler starts and stops.
 
-```powershell
-.\scripts\prod-smoke-all.ps1
-```
+## Workflow
 
-## Code style
+- Open feature work against the `dev` branch.
+- Use `type(scope): thing done` commit subjects in English.
+- Keep player-facing text, configuration defaults, and documentation in English; no emoji.
+- Keep commits focused and do not include generated or local editor files.
+- Explain user-visible changes and verification in the pull request.
 
-- Match the surrounding module and loader conventions.
-- Put shared domain logic in `common/` or `versions/shared/` instead of duplicating it per loader.
-- Add JUnit tests in `common/src/test` for pure logic changes.
+By contributing, you agree that your work is licensed under the MIT License.
