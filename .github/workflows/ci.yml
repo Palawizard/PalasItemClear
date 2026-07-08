@@ -247,59 +247,30 @@ jobs:
           prerelease: false
           fail_on_unmatched_files: true
 
-  # Publishes one version per Minecraft line (bundling its Forge/Fabric/NeoForge files)
-  # to Modrinth and CurseForge. Runs only after a successful release and only when the
-  # project IDs are configured, so it stays dormant until the stores are set up.
-  # One-time setup: create the projects on both sites, then add repository variables
-  # MODRINTH_ID / CURSEFORGE_ID and secrets MODRINTH_TOKEN / CURSEFORGE_TOKEN.
+  # Publishes one version per Minecraft line and loader (a single file each) to Modrinth
+  # and CurseForge, so every store entry maps to exactly one loader with the right
+  # dependencies. Runs only after a successful release and only when the project IDs are
+  # configured, so it stays dormant until the stores are set up. One-time setup: create
+  # the projects, then add repository variables MODRINTH_ID / CURSEFORGE_ID and secrets
+  # MODRINTH_TOKEN / CURSEFORGE_TOKEN.
   publish-mods:
-    name: Publish ${{ matrix.label }} to mod stores
+    name: Publish ${{ matrix.band.label }} ${{ matrix.loader }} to mod stores
     needs: [release]
     if: ${{ vars.MODRINTH_ID != '' || vars.CURSEFORGE_ID != '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 6
       matrix:
-        include:
-          - label: '1.20.1'
-            target: '1.20.1'
-            gameVersions: '1.20.1'
-          - label: '1.20.2-1.20.4'
-            target: '1.20.4'
-            gameVersions: |
-              1.20.2
-              1.20.3
-              1.20.4
-          - label: '1.20.5-1.20.6'
-            target: '1.20.6'
-            gameVersions: |
-              1.20.5
-              1.20.6
-          - label: '1.21-1.21.4'
-            target: '1.21.1'
-            gameVersions: |
-              1.21
-              1.21.1
-              1.21.2
-              1.21.3
-              1.21.4
-          - label: '1.21.5-1.21.10'
-            target: '1.21.10'
-            gameVersions: |
-              1.21.5
-              1.21.6
-              1.21.7
-              1.21.8
-              1.21.9
-              1.21.10
-          - label: '1.21.11'
-            target: '1.21.11'
-            gameVersions: '1.21.11'
-          - label: '26.1-26.2'
-            target: '26.2'
-            gameVersions: |
-              26.1
-              26.2
+        loader: [forge, fabric, neoforge]
+        band:
+          - { label: '1.20.1', target: '1.20.1', gameVersions: '1.20.1' }
+          - { label: '1.20.2-1.20.4', target: '1.20.4', gameVersions: '1.20.2, 1.20.3, 1.20.4' }
+          - { label: '1.20.5-1.20.6', target: '1.20.6', gameVersions: '1.20.5, 1.20.6' }
+          - { label: '1.21-1.21.4', target: '1.21.1', gameVersions: '1.21, 1.21.1, 1.21.2, 1.21.3, 1.21.4' }
+          - { label: '1.21.5-1.21.10', target: '1.21.10', gameVersions: '1.21.5, 1.21.6, 1.21.7, 1.21.8, 1.21.9, 1.21.10' }
+          - { label: '1.21.11', target: '1.21.11', gameVersions: '1.21.11' }
+          - { label: '26.1-26.2', target: '26.2', gameVersions: '26.1, 26.2' }
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -315,23 +286,18 @@ jobs:
         id: v
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish ${{ matrix.label }}
+      - name: Publish ${{ matrix.band.label }} ${{ matrix.loader }}
         uses: Kir-Antipov/mc-publish@v3
         with:
           modrinth-id: ${{ vars.MODRINTH_ID }}
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           curseforge-id: ${{ vars.CURSEFORGE_ID }}
           curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          files: release/**/palas-item-clear-${{ matrix.target }}-*.jar
-          name: "Pala's Item Clear ${{ matrix.label }} - ${{ github.ref_name }}"
-          version: "${{ steps.v.outputs.version }}+mc${{ matrix.target }}"
+          files: release/**/palas-item-clear-${{ matrix.band.target }}-${{ matrix.loader }}-*.jar
+          name: "Pala's Item Clear ${{ matrix.band.label }} (${{ matrix.loader }}) - ${{ github.ref_name }}"
+          version: "${{ steps.v.outputs.version }}+${{ matrix.band.target }}-${{ matrix.loader }}"
           version-type: release
           changelog-file: .github/release-notes/${{ github.ref_name }}.md
-          loaders: |
-            forge
-            fabric
-            neoforge
-          game-versions: ${{ matrix.gameVersions }}
-          dependencies: |
-            fabric-api(optional)
+          loaders: ${{ matrix.loader }}
+          game-versions: ${{ matrix.band.gameVersions }}
           retry-attempts: 2
