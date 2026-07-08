@@ -241,7 +241,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Palas Item Clear - ${{ github.ref_name }}
+          name: "Pala's Item Clear - ${{ github.ref_name }}"
           body_path: .github/release-notes/${{ github.ref_name }}.md
           files: release/**/*.jar
           prerelease: false

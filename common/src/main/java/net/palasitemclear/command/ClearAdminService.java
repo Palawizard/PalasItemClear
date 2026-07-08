@@ -27,7 +27,7 @@ public final class ClearAdminService {
 
     public static String help() {
         return String.join("\n",
-                "Palas Item Clear commands:",
+                "Pala's Item Clear commands:",
                 "  /palasitemclear help - Show this help",
                 "  /palasitemclear status - Show scheduler state and last clear",
                 "  /palasitemclear next - Show time until the next clear",

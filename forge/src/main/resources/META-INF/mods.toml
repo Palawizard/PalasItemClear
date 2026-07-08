@@ -6,8 +6,8 @@ license = "MIT"
 [[mods]]
 modId = "palasitemclear"
 version = "${version}"
-displayName = "Palas Item Clear"
-authors = "Palas"
+displayName = "Pala's Item Clear"
+authors = "Palawi"
 description = '''
 Automatically removes dropped items after configurable warnings.
 '''

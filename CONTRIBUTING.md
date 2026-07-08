@@ -2,7 +2,7 @@
 
 ## Development setup
 
-Palas Item Clear builds with the Gradle wrapper. Install JDK 17, 21, and 25 (for the Minecraft 1.20.x, 1.21.x, and 26.x lines). The build runs on Java 21 and compiles each band with the matching toolchain.
+Pala's Item Clear builds with the Gradle wrapper. Install JDK 17, 21, and 25 (for the Minecraft 1.20.x, 1.21.x, and 26.x lines). The build runs on Java 21 and compiles each band with the matching toolchain.
 
 ```powershell
 .\gradlew.bat clean build

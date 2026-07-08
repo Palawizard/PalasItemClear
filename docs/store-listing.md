@@ -18,13 +18,13 @@ Modrinth accepts Markdown directly. On CurseForge, paste into the rich-text edit
 apply headings/lists. This body leads with the primary keywords for search ranking.
 
 ```markdown
-# Palas Item Clear
+# Pala's Item Clear
 
-**Palas Item Clear** is a lightweight, **server-side** mod that automatically **clears dropped items** on your Minecraft server to **reduce lag** and keep the ground clean. It is a modern, fully configurable alternative to classic **clear-lag / ClearLagg** mods, and it runs on **Forge, Fabric, and NeoForge** across every Minecraft version from **1.20.1 to 26.2**.
+**Pala's Item Clear** is a lightweight, **server-side** mod that automatically **clears dropped items** on your Minecraft server to **reduce lag** and keep the ground clean. It is a modern, fully configurable alternative to classic **clear-lag / ClearLagg** mods, and it runs on **Forge, Fabric, and NeoForge** across every Minecraft version from **1.20.1 to 26.2**.
 
 Players do **not** need to install anything: the mod is server-side only, and vanilla clients can connect normally.
 
-## Why Palas Item Clear
+## Why Pala's Item Clear
 
 - **Reduce server lag** caused by piles of dropped item entities on the ground.
 - **Fair warnings** so players can pick up loot before a clear: colored chat messages at 60, 30, and 5 seconds (all configurable).

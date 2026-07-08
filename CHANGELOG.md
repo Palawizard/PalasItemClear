@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Palas Item Clear are documented in this file.
+All notable changes to Pala's Item Clear are documented in this file.
 
 ## [0.1.0] - 2026-07-08
 

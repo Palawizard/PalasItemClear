@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "palasitemclear",
   "version": "${version}",
-  "name": "Palas Item Clear",
+  "name": "Pala's Item Clear",
   "description": "Automatically removes dropped items after configurable warnings.",
   "authors": [
-    "Palas"
+    "Palawi"
   ],
   "license": "MIT",
   "environment": "server",
