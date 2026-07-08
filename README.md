@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" alt="Palas Item Clear" width="120" height="120">
+  <img src="docs/assets/logo.svg" alt="Pala's Item Clear" width="120" height="120">
 </p>
 
-# Palas Item Clear
+# Pala's Item Clear
 
 ### Periodically clear dropped items on your Minecraft server, with warnings and a recovery bin
 
@@ -95,7 +95,7 @@ All commands require permission level 2.
 
 ## Compatibility
 
-Palas Item Clear ships a separate artifact for every Minecraft version band and loader, from 1.20.1 through 26.2. Metadata ranges cover every patch with no gaps or overlaps, so exactly one artifact matches any supported server.
+Pala's Item Clear ships a separate artifact for every Minecraft version band and loader, from 1.20.1 through 26.2. Metadata ranges cover every patch with no gaps or overlaps, so exactly one artifact matches any supported server.
 
 The full matrix, Java requirements, companion mods, and porting policy live in [docs/SUPPORT.md](docs/SUPPORT.md).
 
@@ -172,4 +172,4 @@ Distributed under the [MIT License](LICENSE).
 
 ---
 
-Palas Item Clear | Server-side | Minecraft 1.20.1 to 26.2
+Pala's Item Clear | Server-side | Minecraft 1.20.1 to 26.2

@@ -277,7 +277,7 @@ filter_tier=$filterTier
 java_release=$($Band.java)
 
 mod_id=palasitemclear
-mod_name=Palas Item Clear
+mod_name=Pala's Item Clear
 mod_version=0.1.0
 mod_group_id=net.palasitemclear
 mod_license=MIT
@@ -340,7 +340,7 @@ java_release=$($Band.java)
 mod_version=0.1.0
 mod_group_id=net.palasitemclear
 mod_id=palasitemclear
-mod_name=Palas Item Clear
+mod_name=Pala's Item Clear
 mod_license=MIT
 "@
         Write-Utf8NoBom -Path (Join-Path $target 'gradle.properties') -Content $props
