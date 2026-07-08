@@ -29,6 +29,6 @@ stays dormant until you set it up once:
    `CURSEFORGE_ID` (numeric project id).
 3. Add the credentials as **repository secrets**: `MODRINTH_TOKEN` and `CURSEFORGE_TOKEN`.
 
-After that, every `v*` tag publishes one version per Minecraft line (each bundling its
-Forge, Fabric, and NeoForge files) with the release notes as the changelog. Configure
-only one platform and the other is skipped automatically.
+After that, every `v*` tag publishes one version per Minecraft line and loader (a single
+file each, so every store entry maps to exactly one loader) with the release notes as the
+changelog. Configure only one platform and the other is skipped automatically.
