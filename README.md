@@ -16,6 +16,12 @@
 
 ---
 
+<p align="center">
+  <img src="docs/assets/screen%201.png" alt="Colored chat warnings counting down before a clear, then a &quot;Cleared 7 dropped items&quot; confirmation" width="820">
+</p>
+
+---
+
 ## Features
 
 ### Clearing

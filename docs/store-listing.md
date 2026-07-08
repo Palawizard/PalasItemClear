@@ -20,6 +20,8 @@ apply headings/lists. This body leads with the primary keywords for search ranki
 ```markdown
 # Pala's Item Clear
 
+![Colored chat warnings counting down before a clear, then a "Cleared 7 dropped items" confirmation](https://raw.githubusercontent.com/Palawizard/PalasItemClear/main/docs/assets/screen%201.png)
+
 **Pala's Item Clear** is a lightweight, **server-side** mod that automatically **clears dropped items** on your Minecraft server to **reduce lag** and keep the ground clean. It is a modern, fully configurable alternative to classic **clear-lag / ClearLagg** mods, and it runs on **Forge, Fabric, and NeoForge** across every Minecraft version from **1.20.1 to 26.2**.
 
 Players do **not** need to install anything: the mod is server-side only, and vanilla clients can connect normally.
