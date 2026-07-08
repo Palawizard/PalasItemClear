@@ -26,7 +26,7 @@ if (-not $band) { throw "Unknown version band '$BandId'." }
 $loaderConfig = $band.loaders.$Loader
 if (-not $loaderConfig) { throw "Loader '$Loader' is not defined for band '$BandId'." }
 
-$modVersion = '0.1.0'
+$modVersion = '0.1.1'
 $architecturyVersion = '9.2.14'
 $rconPassword = 'palasitemclear-smoke'
 $cacheRoot = Join-Path $projectRoot 'build\prod-smoke'
