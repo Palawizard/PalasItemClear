@@ -2,7 +2,7 @@
 
 All notable changes to Pala's Item Clear are documented in this file.
 
-## [0.1.0] - 2026-07-08
+## [0.1.1] - 2026-07-08
 
 ### Added
 

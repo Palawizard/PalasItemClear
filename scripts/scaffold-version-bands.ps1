@@ -278,7 +278,7 @@ java_release=$($Band.java)
 
 mod_id=palasitemclear
 mod_name=Pala's Item Clear
-mod_version=0.1.0
+mod_version=0.1.1
 mod_group_id=net.palasitemclear
 mod_license=MIT
 "@
@@ -306,7 +306,7 @@ loom_version=$($Loader.loomVersion)
 filter_tier=$filterTier
 java_release=$($Band.java)
 
-mod_version=0.1.0
+mod_version=0.1.1
 maven_group=net.palasitemclear
 fabric_api_version=$($Loader.fabricApi)
 yarn_mappings=$($Loader.yarnMappings)
@@ -337,7 +337,7 @@ filter_tier=$filterTier
 null_thrower=true
 java_release=$($Band.java)
 
-mod_version=0.1.0
+mod_version=0.1.1
 mod_group_id=net.palasitemclear
 mod_id=palasitemclear
 mod_name=Pala's Item Clear
