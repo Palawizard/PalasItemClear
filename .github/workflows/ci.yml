@@ -307,3 +307,52 @@ jobs:
           loaders: ${{ matrix.loader }}
           game-versions: ${{ steps.meta.outputs.gameVersions }}
           retry-attempts: 2
+
+  # mc-publish cannot set Modrinth's new per-version environment field and does
+  # not map the "architectury" mod id to its Modrinth project, so freshly
+  # published versions come out as environment "unknown" and the Architectury-based
+  # 1.20.1 Forge/Fabric line ships without its required Architectury API dependency.
+  # This step fixes both through the Modrinth v3 API for every version of this release.
+  finalize-modrinth-metadata:
+    name: Finalize Modrinth version metadata
+    needs: [publish-mods]
+    if: ${{ vars.MODRINTH_ID != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment and 1.20.1 dependencies
+        env:
+          MODRINTH_ID: ${{ vars.MODRINTH_ID }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MODRINTH_TOKEN:-}" ]; then
+            echo "MODRINTH_TOKEN is not set; skipping Modrinth metadata finalization."
+            exit 0
+          fi
+          version="${RELEASE_TAG#v}"
+          api="https://api.modrinth.com/v3"
+          # Fixed Modrinth project ids for the companions the 1.20.1 (Architectury) line requires; mc-publish maps fabric-api but not architectury.
+          fabric_api="P7dR8mSH"
+          architectury="lhGA9TYQ"
+          echo "Finalizing Modrinth metadata for release ${version}"
+          versions="$(curl -fsS -H "Authorization: ${MODRINTH_TOKEN}" "${api}/project/${MODRINTH_ID}/version")"
+          failed=0
+          while read -r id vnum; do
+            case "$vnum" in
+              *"+1.20.1-fabric") body="$(jq -nc --arg fa "$fabric_api" --arg ar "$architectury" '{environment:"server_only",dependencies:[{project_id:$fa,dependency_type:"required"},{project_id:$ar,dependency_type:"required"}]}')" ;;
+              *"+1.20.1-forge") body="$(jq -nc --arg ar "$architectury" '{environment:"server_only",dependencies:[{project_id:$ar,dependency_type:"required"}]}')" ;;
+              *) body='{"environment":"server_only"}' ;;
+            esac
+            code="$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "${api}/version/${id}" -H "Authorization: ${MODRINTH_TOKEN}" -H 'Content-Type: application/json' -d "$body")"
+            echo "  HTTP ${code}  ${vnum}"
+            if [ "$code" != "204" ]; then
+              echo "::error::Failed to update ${vnum} (HTTP ${code})"
+              failed=1
+            fi
+          done < <(printf '%s' "$versions" | jq -r --arg v "$version" '.[] | select(.version_number | startswith($v + "+")) | [.id, .version_number] | join(" ")')
+          if [ "$failed" -ne 0 ]; then
+            echo "One or more Modrinth versions could not be finalized."
+            exit 1
+          fi
+          echo "All ${version} Modrinth versions set to server_only; 1.20.1 Architectury deps re-added."
