@@ -63,7 +63,7 @@ clear items, clear lag, clearlag, clearlagg, item cleaner, dropped item removal,
 - Project type: **Mod**
 - Environment: **Server** (client: unsupported / not required)
 - Loaders: **Forge, Fabric, NeoForge**
-- Categories: **Management**, **Utility**, **Optimization**
+- Categories: **Management**, **Utility** (not **Optimization** — that tag is for mods that improve performance transparently without changing gameplay; clearing dropped items alters world state, so Modrinth moderation classifies it as Utility/Management)
 - Game versions: 1.20.1 through 26.2 (tag each supported band)
 - License: **MIT**
 - Links: Source and Issues -> this GitHub repository
