@@ -13,16 +13,19 @@ Automatically removes dropped items after configurable warnings.
 
 displayTest = "IGNORE_SERVER_VERSION"
 
+# NeoForge 20.2-20.3 (FML 1.x) only read "mandatory"; 20.4 and newer read "type".
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
-versionRange = "[${neo_version},)"
+mandatory = true
+versionRange = "${neo_version_range}"
 ordering = "NONE"
 side = "SERVER"
 
 [[dependencies.${mod_id}]]
 modId = "minecraft"
 type = "required"
+mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "SERVER"
