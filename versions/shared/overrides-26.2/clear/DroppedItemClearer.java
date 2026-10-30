@@ -10,6 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.palasitemclear.bin.CapturedItem;
 import net.palasitemclear.compat.ModernServerSupport;
 
@@ -65,7 +66,8 @@ public final class DroppedItemClearer {
     }
 
     private static CapturedItem captureItem(ItemEntity item, MinecraftServer server) {
-        UUID ownerUuid = item.getOwner() == null ? null : item.getOwner().getUUID();
+        // Only players are attributed: mob throwers (piglins, villagers, allays) stay unowned.
+        UUID ownerUuid = item.getOwner() instanceof Player owner ? owner.getUUID() : null;
         String ownerName = null;
 
         if (ownerUuid != null) {

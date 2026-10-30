@@ -1,7 +1,5 @@
 package net.palasitemclear.compat;
 
-import com.mojang.authlib.GameProfile;
-import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
@@ -9,6 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.server.permissions.PermissionSet;
+import net.minecraft.server.players.NameAndId;
 
 public final class ModernServerSupport {
     private ModernServerSupport() {
@@ -28,7 +27,7 @@ public final class ModernServerSupport {
             return online.getGameProfile().name();
         }
 
-        Optional<GameProfile> profile = server.services().profileResolver().fetchById(ownerUuid);
-        return profile.map(GameProfile::name).orElse(null);
+        // Local user cache only: profileResolver() would block the server thread on a Mojang request.
+        return server.services().nameToIdCache().get(ownerUuid).map(NameAndId::name).orElse(null);
     }
 }

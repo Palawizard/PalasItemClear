@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.palasitemclear.bin.CapturedItem;
 
 /**
@@ -65,8 +66,10 @@ public final class DroppedItemClearer {
     }
 
     private static CapturedItem captureItem(ItemEntity item, MinecraftServer server) {
+        Entity owner = item.getOwner();
         UUID ownerUuid = resolveAttributionUuid(
-                item.getOwner() == null ? null : item.getOwner().getUUID(),
+                owner == null ? null : owner.getUUID(),
+                owner instanceof Player,
                 item.thrower
         );
         String ownerName = null;
@@ -78,10 +81,23 @@ public final class DroppedItemClearer {
         return new CapturedItem(item.getItem(), ownerUuid, ownerName);
     }
 
-    static UUID resolveAttributionUuid(UUID ownerUuid, UUID throwerUuid) {
-        return ownerUuid != null ? ownerUuid : throwerUuid;
+    /**
+     * Attributes an item to the player who dropped it. Items thrown by mobs (piglin bartering,
+     * villagers, allays) stay unattributed, so they neither trigger profile lookups nor split
+     * recovery-bin stacks per mob.
+     */
+    static UUID resolveAttributionUuid(UUID ownerUuid, boolean ownerIsPlayer, UUID throwerUuid) {
+        if (ownerUuid != null) {
+            return ownerIsPlayer ? ownerUuid : null;
+        }
+
+        return throwerUuid;
     }
 
+    /**
+     * Resolves a display name from online players and the local user cache only. This runs on the
+     * server thread for every cleared item, so it must never query Mojang's profile service.
+     */
     private static String resolveOwnerName(MinecraftServer server, UUID ownerUuid) {
         ServerPlayer online = server.getPlayerList().getPlayer(ownerUuid);
         if (online != null) {

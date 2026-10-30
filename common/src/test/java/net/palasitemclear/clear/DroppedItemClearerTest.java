@@ -11,13 +11,19 @@ final class DroppedItemClearerTest {
     private static final UUID THROWER = UUID.fromString("00000000-0000-0000-0000-000000000002");
 
     @Test
-    void prefersTheCurrentOwnerForAttribution() {
-        assertEquals(OWNER, DroppedItemClearer.resolveAttributionUuid(OWNER, THROWER));
+    void prefersTheCurrentPlayerOwnerForAttribution() {
+        assertEquals(OWNER, DroppedItemClearer.resolveAttributionUuid(OWNER, true, THROWER));
+    }
+
+    @Test
+    void ignoresNonPlayerOwners() {
+        assertNull(DroppedItemClearer.resolveAttributionUuid(OWNER, false, THROWER));
+        assertNull(DroppedItemClearer.resolveAttributionUuid(OWNER, false, null));
     }
 
     @Test
     void fallsBackToTheThrowerForAttribution() {
-        assertEquals(THROWER, DroppedItemClearer.resolveAttributionUuid(null, THROWER));
-        assertNull(DroppedItemClearer.resolveAttributionUuid(null, null));
+        assertEquals(THROWER, DroppedItemClearer.resolveAttributionUuid(null, false, THROWER));
+        assertNull(DroppedItemClearer.resolveAttributionUuid(null, false, null));
     }
 }
