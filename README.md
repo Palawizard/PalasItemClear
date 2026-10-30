@@ -29,8 +29,8 @@
 - Reduces server lag caused by accumulating dropped items, like a modern ClearLag alternative
 - Removes only dropped item entities, on the server thread, across loaded server levels
 - Configurable interval with a five-minute default
-- Item, dimension, age, custom-name, and player-ownership filters
-- Guardrail against runaway passes with very large item counts
+- Item, item-tag, dimension, age, custom-name, and player-ownership filters
+- Per-item and per-tag minimum age overrides
 
 ### Warnings and messages
 
@@ -75,6 +75,9 @@ The server creates `config/palasitemclear.json` on first startup. Defaults:
 - Clear interval: 300 seconds
 - Warnings: 60, 30, and 5 seconds before each clear
 - Recovery-bin retention: 120 seconds in memory
+
+Set `"warningSeconds": [30]` to keep only the 30-second warning, or `[]` to disable warnings.
+`excludedItems` and `minAgeTicksOverrides` accept item tags such as `#minecraft:logs`.
 
 Run `/palasitemclear reload` after editing the file. The full schema and an example live in [docs/SUPPORT.md](docs/SUPPORT.md#configuration-reference).
 

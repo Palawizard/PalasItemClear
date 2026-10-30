@@ -18,9 +18,13 @@ Every row below is a separate release artifact. Install the JAR that matches bot
 | 1.21–1.21.4 | 1.21.1 | Forge 52.x | 21 | none | `1.21.1-forge` | Supported |
 | 1.21–1.21.4 | 1.21.1 | Fabric 0.16.x | 21 | Fabric API | `1.21.1-fabric` | Supported |
 | 1.21–1.21.4 | 1.21.1 | NeoForge 21.1.x | 21 | none | `1.21.1-neoforge` | Supported |
-| 1.21.5–1.21.10 | 1.21.10 | Forge 60.x | 21 | none | `1.21.10-forge` | Supported |
-| 1.21.5–1.21.10 | 1.21.10 | Fabric 0.19.x | 21 | Fabric API | `1.21.10-fabric` | Supported |
-| 1.21.5–1.21.10 | 1.21.10 | NeoForge 21.10.x | 21 | none | `1.21.10-neoforge` | Supported |
+| 1.21.5 | 1.21.5 | Forge 55.x | 21 | none | `1.21.5-forge` | Supported |
+| 1.21.6–1.21.8 | 1.21.8 | Forge 56.x–58.x | 21 | none | `1.21.8-forge` | Supported |
+| 1.21.5–1.21.8 | 1.21.8 | Fabric 0.19.x | 21 | Fabric API | `1.21.8-fabric` | Supported |
+| 1.21.5–1.21.8 | 1.21.8 | NeoForge 21.5.x–21.8.x | 21 | none | `1.21.8-neoforge` | Supported |
+| 1.21.9–1.21.10 | 1.21.10 | Forge 59.x–60.x | 21 | none | `1.21.10-forge` | Supported |
+| 1.21.9–1.21.10 | 1.21.10 | Fabric 0.19.x | 21 | Fabric API | `1.21.10-fabric` | Supported |
+| 1.21.9–1.21.10 | 1.21.10 | NeoForge 21.9.x–21.10.x | 21 | none | `1.21.10-neoforge` | Supported |
 | 1.21.11 | 1.21.11 | Forge 61.x | 21 | none | `1.21.11-forge` | Supported |
 | 1.21.11 | 1.21.11 | Fabric 0.19.x | 21 | Fabric API | `1.21.11-fabric` | Supported |
 | 1.21.11 | 1.21.11 | NeoForge 21.11.x | 21 | none | `1.21.11-neoforge` | Supported |
@@ -28,7 +32,7 @@ Every row below is a separate release artifact. Install the JAR that matches bot
 | 26.1–26.2 | 26.2 | Fabric 0.19.x | 25 | Fabric API | `26.2-fabric` | Supported |
 | 26.1–26.2 | 26.2 | NeoForge 26.2.x | 25 | none | `26.2-neoforge` | Supported |
 
-Metadata version ranges cover every patch inside each band. A successful load outside these rows does not imply support.
+Metadata version ranges cover every patch inside each band. Forge splits 1.21.5–1.21.8 in two because Forge 56 (1.21.6) moved to EventBus 7, which is incompatible with Forge 55. A successful load outside these rows does not imply support.
 
 ## Artifact policy
 
@@ -52,9 +56,10 @@ Metadata version ranges cover every patch inside each band. A successful load ou
     "cleared": "<gray>Cleared <white>{count}</white> dropped items."
   },
   "filters": {
-    "excludedItems": ["minecraft:nether_star"],
+    "excludedItems": ["minecraft:nether_star", "#minecraft:shulker_boxes"],
     "excludedDimensions": ["minecraft:the_end"],
     "minAgeTicks": 0,
+    "minAgeTicksOverrides": { "minecraft:wheat_seeds": 1200, "#minecraft:logs": 2400 },
     "excludeNamedItems": false,
     "excludePlayerOwnedItems": false
   },
@@ -65,6 +70,19 @@ Metadata version ranges cover every patch inside each band. A successful load ou
 ```
 
 `excludedItems` and `excludedDimensions` require full `namespace:id` identifiers. Invalid configuration is backed up and safe defaults are loaded.
+
+| Key | Meaning |
+| --- | --- |
+| `schedule.warningSeconds` | Seconds before each clear at which a chat warning is sent. `[30]` keeps only the 30-second warning; `[]` disables warnings. Each value must be lower than `intervalSeconds`. |
+| `filters.excludedItems` | Items never cleared. Accepts item IDs (`minecraft:diamond`) and item tags prefixed with `#` (`#minecraft:logs`). |
+| `filters.minAgeTicks` | Minimum age, in ticks (20 per second), before a dropped item can be cleared. `0` clears items of any age. |
+| `filters.minAgeTicksOverrides` | Per-item or per-tag minimum age that replaces `minAgeTicks` for matching items, lower or higher. An item ID wins over tags; when several tags match, the longest age applies. |
+| `filters.excludeNamedItems` | Keep items whose entity or stack has a custom name. |
+| `filters.excludePlayerOwnedItems` | Keep items dropped by a player who is currently loaded in the world. Items thrown by mobs (piglin bartering, villagers, allays) are cleared. |
+
+Tag names come from the game and the loader, so they differ between platforms: vanilla tags such as `#minecraft:logs` work everywhere, while shared tool tags are `#forge:tools` on Forge 1.20.1 and `#c:tools` on newer Forge, NeoForge, and Fabric lines. A tag that does not exist simply matches nothing.
+
+The recovery bin records the player who dropped each item, using only online players and the server's local user cache (`usercache.json`). It never queries Mojang's profile service during a clear.
 
 ## Porting policy
 
