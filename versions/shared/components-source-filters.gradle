@@ -12,3 +12,12 @@ ext.componentizeSharedTestLine = { String line ->
     line.replace('new ResourceLocation("minecraft", "overworld")',
             'ResourceLocation.fromNamespaceAndPath("minecraft", "overworld")')
 }
+
+// The 1.21.8-compiled JARs also run on earlier patches (Fabric and NeoForge from 1.21.5, Forge from
+// 1.21.6): ServerPlayer.serverLevel() is gone from 1.21.6 while Entity.getServer() exists across the
+// whole range, and ItemEntity.thrower changes type in 1.21.6.
+ext.componentize1218SharedSourceLine = { String line ->
+    componentizeSharedSourceLine(line)
+            .replace('player.serverLevel().getServer()', 'player.getServer()')
+            .replace('                item.thrower', '                null')
+}

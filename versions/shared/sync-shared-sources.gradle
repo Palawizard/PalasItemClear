@@ -1,5 +1,5 @@
 def tier = findProperty('filter_tier') ?: 'legacy'
-def isComponentsTier = (tier == 'components' || tier == 'components-legacy-rl')
+def isComponentsTier = (tier == 'components' || tier == 'components-legacy-rl' || tier == 'components-1218')
 def usesOverrides26 = (tier == 'modern' || tier == 'premodern')
 def nullThrower = (findProperty('null_thrower') ?: 'false').toBoolean()
 
@@ -29,6 +29,8 @@ def syncSharedMain = tasks.register('syncSharedMain', Sync) {
         filter { line -> modernizeSharedSourceLine(line) }
     } else if (tier == 'premodern') {
         filter { line -> premodernizeSharedSourceLine(line) }
+    } else if (tier == 'components-1218') {
+        filter { line -> componentize1218SharedSourceLine(line) }
     } else if (isComponentsTier) {
         filter { line -> componentizeSharedSourceLine(line) }
     } else if (tier == 'components-2') {
@@ -48,7 +50,7 @@ def syncSharedTest = tasks.register('syncSharedTest', Sync) {
     } else if (tier == 'premodern') {
         exclude '**/DroppedItemClearerTest.java'
         filter { line -> premodernizeSharedTestLine(line) }
-    } else if (tier == 'components') {
+    } else if (tier == 'components' || tier == 'components-1218') {
         filter { line -> componentizeSharedTestLine(line) }
     } else if (tier == 'components-2') {
         filter { line -> componentize2SharedTestLine(line) }

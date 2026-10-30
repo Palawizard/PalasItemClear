@@ -37,7 +37,8 @@ function Get-FilterTier {
     $patch = if ($parts.Length -gt 2) { [int]$parts[2] } else { 0 }
     if ($minor -eq 20 -and $patch -le 4) { return 'legacy' }
     if ($minor -eq 20 -and $patch -ge 5) { return 'components-legacy-rl' }
-    if ($minor -eq 21 -and $patch -ge 5) { return 'components-2' }
+    if ($minor -eq 21 -and $patch -ge 9) { return 'components-2' }
+    if ($minor -eq 21 -and $patch -ge 6) { return 'components-1218' }
     return 'components'
 }
 
