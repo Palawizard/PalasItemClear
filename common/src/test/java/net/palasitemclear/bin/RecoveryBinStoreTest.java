@@ -3,6 +3,7 @@ package net.palasitemclear.bin;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.UUID;
 import net.minecraft.SharedConstants;
 import net.minecraft.server.Bootstrap;
@@ -71,5 +72,35 @@ final class RecoveryBinStoreTest {
 
         assertTrue(store.takeById(entryId, 64, 100L).isEmpty());
         assertEquals(0, store.size());
+    }
+
+    @Test
+    void mergesDepositsIntoFullStacksPerOwner() {
+        RecoveryBinStore store = new RecoveryBinStore();
+        store.deposit(List.of(
+                new CapturedItem(Items.COBBLESTONE.getDefaultInstance().copyWithCount(40), PLAYER_ONE, "Alice"),
+                new CapturedItem(Items.COBBLESTONE.getDefaultInstance().copyWithCount(40), PLAYER_ONE, "alice"),
+                new CapturedItem(Items.COBBLESTONE.getDefaultInstance().copyWithCount(10), PLAYER_TWO, "Bob"),
+                new CapturedItem(Items.COBBLESTONE.getDefaultInstance().copyWithCount(30), PLAYER_ONE, "Alice")
+        ), 100L, 200L);
+
+        List<Integer> aliceCounts = store.viewEntries(PLAYER_ONE).stream()
+                .map(entry -> entry.stack().getCount())
+                .toList();
+        assertEquals(List.of(64, 46), aliceCounts);
+        assertEquals(1, store.countEntries(PLAYER_TWO));
+        assertEquals(3, store.size());
+    }
+
+    @Test
+    void keepsNonStackableItemsAsSeparateEntries() {
+        RecoveryBinStore store = new RecoveryBinStore();
+        store.deposit(List.of(
+                new CapturedItem(Items.DIAMOND_SWORD.getDefaultInstance(), null, null),
+                new CapturedItem(Items.DIAMOND_SWORD.getDefaultInstance(), null, null)
+        ), 100L, 200L);
+        store.deposit(List.of(new CapturedItem(Items.DIAMOND_SWORD.getDefaultInstance(), null, null)), 110L, 200L);
+
+        assertEquals(3, store.size());
     }
 }

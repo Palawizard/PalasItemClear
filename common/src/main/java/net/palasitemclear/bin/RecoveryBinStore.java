@@ -1,12 +1,15 @@
 package net.palasitemclear.bin;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -24,40 +27,80 @@ public final class RecoveryBinStore {
         }
 
         long expiresAtTick = currentTick + retentionTicks;
+        Map<Item, List<RecoveryBinEntry>> openEntries = indexOpenEntries();
         for (CapturedItem captured : capturedItems) {
-            depositSingle(captured, expiresAtTick);
+            depositSingle(captured, expiresAtTick, openEntries);
         }
     }
 
-    private void depositSingle(CapturedItem captured, long expiresAtTick) {
+    /**
+     * Groups entries that still have room by item, so each deposit only scans stacks it could
+     * actually merge into instead of the whole bin.
+     */
+    private Map<Item, List<RecoveryBinEntry>> indexOpenEntries() {
+        Map<Item, List<RecoveryBinEntry>> openEntries = new HashMap<>();
+        for (RecoveryBinEntry entry : entries) {
+            if (hasSpace(entry.stack())) {
+                openEntries.computeIfAbsent(entry.stack().getItem(), item -> new ArrayList<>()).add(entry);
+            }
+        }
+
+        return openEntries;
+    }
+
+    private void depositSingle(
+            CapturedItem captured,
+            long expiresAtTick,
+            Map<Item, List<RecoveryBinEntry>> openEntries
+    ) {
         ItemStack remaining = captured.stack().copy();
         if (remaining.isEmpty()) {
             return;
         }
 
-        for (RecoveryBinEntry entry : entries) {
-            if (!matchesOwnership(entry, captured.ownerUuid(), captured.ownerName())) {
-                continue;
-            }
+        List<RecoveryBinEntry> candidates = remaining.isStackable()
+                ? openEntries.computeIfAbsent(remaining.getItem(), item -> new ArrayList<>())
+                : null;
 
-            if (!ItemStack.isSameItemSameTags(entry.stack(), remaining)) {
-                continue;
-            }
+        if (candidates != null) {
+            Iterator<RecoveryBinEntry> iterator = candidates.iterator();
+            while (iterator.hasNext()) {
+                RecoveryBinEntry entry = iterator.next();
+                if (!matchesOwnership(entry, captured.ownerUuid(), captured.ownerName())) {
+                    continue;
+                }
 
-            int moved = mergeInto(entry, remaining, expiresAtTick);
-            remaining.shrink(moved);
-            if (remaining.isEmpty()) {
-                return;
+                if (!ItemStack.isSameItemSameTags(entry.stack(), remaining)) {
+                    continue;
+                }
+
+                int moved = mergeInto(entry, remaining, expiresAtTick);
+                remaining.shrink(moved);
+                if (!hasSpace(entry.stack())) {
+                    iterator.remove();
+                }
+
+                if (remaining.isEmpty()) {
+                    return;
+                }
             }
         }
 
-        entries.add(new RecoveryBinEntry(
+        RecoveryBinEntry created = new RecoveryBinEntry(
                 nextId++,
                 remaining,
                 captured.ownerUuid(),
                 captured.ownerName(),
                 expiresAtTick
-        ));
+        );
+        entries.add(created);
+        if (candidates != null && hasSpace(created.stack())) {
+            candidates.add(created);
+        }
+    }
+
+    private static boolean hasSpace(ItemStack stack) {
+        return stack.getCount() < stack.getMaxStackSize();
     }
 
     private static int mergeInto(RecoveryBinEntry entry, ItemStack remaining, long expiresAtTick) {
@@ -76,12 +119,12 @@ public final class RecoveryBinStore {
     }
 
     static boolean matchesOwnership(RecoveryBinEntry entry, UUID ownerUuid, String ownerName) {
-        return Objects.equals(entry.ownerUuid().orElse(null), ownerUuid)
-                && Objects.equals(normalizeOwnerName(entry.ownerName().orElse(null)), normalizeOwnerName(ownerName));
-    }
+        if (!Objects.equals(entry.ownerUuid().orElse(null), ownerUuid)) {
+            return false;
+        }
 
-    private static String normalizeOwnerName(String ownerName) {
-        return ownerName == null ? null : ownerName.toLowerCase(Locale.ROOT);
+        String entryName = entry.ownerName().orElse(null);
+        return entryName == null ? ownerName == null : entryName.equalsIgnoreCase(ownerName);
     }
 
     public void evictExpired(long currentTick) {
