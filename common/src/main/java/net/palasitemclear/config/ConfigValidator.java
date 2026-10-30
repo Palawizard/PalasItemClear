@@ -1,8 +1,11 @@
 package net.palasitemclear.config;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.minecraft.resources.ResourceLocation;
 
@@ -30,6 +33,10 @@ public final class ConfigValidator {
                 ? List.of()
                 : List.copyOf(filters.excludedDimensions());
 
+        Map<String, Integer> minAgeTicksOverrides = filters.minAgeTicksOverrides() == null
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(filters.minAgeTicksOverrides()));
+
         String warningMessage = messages.warning() == null || messages.warning().isBlank()
                 ? MessagesConfig.defaults().warning()
                 : messages.warning();
@@ -46,6 +53,7 @@ public final class ConfigValidator {
                         excludedItems,
                         excludedDimensions,
                         filters.minAgeTicks(),
+                        minAgeTicksOverrides,
                         filters.excludeNamedItems(),
                         filters.excludePlayerOwnedItems()
                 ),
@@ -92,8 +100,17 @@ public final class ConfigValidator {
             throw new ConfigValidationException("filters.minAgeTicks cannot be negative");
         }
 
-        validateResourceIds(config.filters().excludedItems(), "filters.excludedItems");
-        validateResourceIds(config.filters().excludedDimensions(), "filters.excludedDimensions");
+        validateResourceIds(config.filters().excludedItems(), "filters.excludedItems", true);
+        validateResourceIds(config.filters().excludedDimensions(), "filters.excludedDimensions", false);
+        validateResourceIds(config.filters().minAgeTicksOverrides().keySet(), "filters.minAgeTicksOverrides", true);
+
+        for (Map.Entry<String, Integer> override : config.filters().minAgeTicksOverrides().entrySet()) {
+            if (override.getValue() == null || override.getValue() < 0) {
+                throw new ConfigValidationException(
+                        "filters.minAgeTicksOverrides value for " + override.getKey() + " must be zero or positive"
+                );
+            }
+        }
 
         if (config.bin().retentionSeconds() <= 0) {
             throw new ConfigValidationException("bin.retentionSeconds must be positive");
@@ -102,19 +119,24 @@ public final class ConfigValidator {
         return config;
     }
 
-    private static void validateResourceIds(List<String> values, String fieldName) throws ConfigValidationException {
-        for (String value : values) {
-            if (value == null || value.isBlank()) {
+    private static void validateResourceIds(Iterable<String> values, String fieldName, boolean allowTags)
+            throws ConfigValidationException {
+        for (String entry : values) {
+            if (entry == null || entry.isBlank()) {
                 throw new ConfigValidationException(fieldName + " entries cannot be blank");
             }
 
+            String value = allowTags && entry.startsWith(FiltersConfig.TAG_PREFIX)
+                    ? entry.substring(FiltersConfig.TAG_PREFIX.length())
+                    : entry;
+
             if (!value.contains(":")) {
-                throw new ConfigValidationException(fieldName + " entry must use namespace:id format: " + value);
+                throw new ConfigValidationException(fieldName + " entry must use namespace:id format: " + entry);
             }
 
             String[] parts = value.split(":", 2);
             if (parts[0].isBlank() || parts[1].isBlank() || ResourceLocation.tryParse(value) == null) {
-                throw new ConfigValidationException(fieldName + " contains an invalid resource ID: " + value);
+                throw new ConfigValidationException(fieldName + " contains an invalid resource ID: " + entry);
             }
         }
     }

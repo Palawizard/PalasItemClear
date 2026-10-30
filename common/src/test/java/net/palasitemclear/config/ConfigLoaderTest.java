@@ -81,6 +81,8 @@ final class ConfigLoaderTest {
         assertEquals(ConfigConstants.CURRENT_VERSION, loaded.configVersion());
         assertEquals(120, loaded.schedule().intervalSeconds());
         assertEquals("<yellow>Clear in {seconds}s", loaded.messages().warning());
+        assertTrue(loaded.filters().minAgeTicksOverrides().isEmpty());
+        assertTrue(Files.readString(configPath).contains("\"minAgeTicksOverrides\": {}"));
     }
 
     @Test

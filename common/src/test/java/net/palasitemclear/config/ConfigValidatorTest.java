@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 final class ConfigValidatorTest {
@@ -65,7 +66,7 @@ final class ConfigValidatorTest {
                 1,
                 ScheduleConfig.defaults(),
                 MessagesConfig.defaults(),
-                new FiltersConfig(List.of(), List.of(), -1, false, false),
+                new FiltersConfig(List.of(), List.of(), -1, Map.of(), false, false),
                 BinConfig.defaults()
         );
 
@@ -79,18 +80,21 @@ final class ConfigValidatorTest {
                 ScheduleConfig.defaults(),
                 MessagesConfig.defaults(),
                 new FiltersConfig(
-                        List.of("minecraft:diamond"),
+                        List.of("minecraft:diamond", "#c:tools"),
                         List.of("minecraft:the_end"),
                         100,
+                        Map.of("minecraft:wheat_seeds", 1_200, "#minecraft:logs", 2_400),
                         true,
                         true
                 ),
                 BinConfig.defaults()
         ));
 
-        assertEquals(List.of("minecraft:diamond"), config.filters().excludedItems());
+        assertEquals(List.of("minecraft:diamond", "#c:tools"), config.filters().excludedItems());
         assertEquals(List.of("minecraft:the_end"), config.filters().excludedDimensions());
         assertEquals(100, config.filters().minAgeTicks());
+        assertEquals(1_200, config.filters().minAgeTicksOverrides().get("minecraft:wheat_seeds"));
+        assertEquals(2_400, config.filters().minAgeTicksOverrides().get("#minecraft:logs"));
         assertTrue(config.filters().excludeNamedItems());
         assertTrue(config.filters().excludePlayerOwnedItems());
     }
@@ -101,7 +105,7 @@ final class ConfigValidatorTest {
                 1,
                 ScheduleConfig.defaults(),
                 MessagesConfig.defaults(),
-                new FiltersConfig(List.of("Minecraft:Diamond"), List.of(), 0, false, false),
+                new FiltersConfig(List.of("Minecraft:Diamond"), List.of(), 0, Map.of(), false, false),
                 BinConfig.defaults()
         );
 
@@ -119,5 +123,52 @@ final class ConfigValidatorTest {
         ));
 
         assertEquals(BinConfig.defaults().retentionSeconds(), config.bin().retentionSeconds());
+    }
+
+    @Test
+    void normalizesMissingMinAgeOverrides() throws ConfigValidationException {
+        ModConfig config = ConfigValidator.validate(new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                new FiltersConfig(List.of(), List.of(), 0, null, false, false),
+                BinConfig.defaults()
+        ));
+
+        assertEquals(Map.of(), config.filters().minAgeTicksOverrides());
+    }
+
+    @Test
+    void rejectsNegativeMinAgeOverrides() {
+        ModConfig invalid = new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                new FiltersConfig(List.of(), List.of(), 0, Map.of("minecraft:wheat_seeds", -1), false, false),
+                BinConfig.defaults()
+        );
+
+        assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(invalid));
+    }
+
+    @Test
+    void rejectsMalformedTagsAndDimensionTags() {
+        ModConfig malformedTag = new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                new FiltersConfig(List.of("#tools"), List.of(), 0, Map.of(), false, false),
+                BinConfig.defaults()
+        );
+        ModConfig dimensionTag = new ModConfig(
+                1,
+                ScheduleConfig.defaults(),
+                MessagesConfig.defaults(),
+                new FiltersConfig(List.of(), List.of("#minecraft:the_end"), 0, Map.of(), false, false),
+                BinConfig.defaults()
+        );
+
+        assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(malformedTag));
+        assertThrows(ConfigValidationException.class, () -> ConfigValidator.validate(dimensionTag));
     }
 }
