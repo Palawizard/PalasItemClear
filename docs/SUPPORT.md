@@ -9,15 +9,15 @@ Every row below is a separate release artifact. Install the JAR that matches bot
 | 1.20.1 | 1.20.1 | Forge 47.4.x | 17 | Architectury API | `1.20.1-forge` | Supported |
 | 1.20.1 | 1.20.1 | Fabric 0.19.x | 17 | Fabric API, Architectury API | `1.20.1-fabric` | Supported |
 | 1.20.1 | 1.20.1 | NeoForge 47.1.x | 17 | none | `1.20.1-neoforge` | Supported |
-| 1.20.2–1.20.4 | 1.20.4 | Forge 49.x | 17 | none | `1.20.4-forge` | Supported |
+| 1.20.2–1.20.4 | 1.20.4 | Forge 48.x–49.x | 17 | none | `1.20.4-forge` | Supported |
 | 1.20.2–1.20.4 | 1.20.4 | Fabric 0.16.x | 17 | Fabric API | `1.20.4-fabric` | Supported |
-| 1.20.2–1.20.4 | 1.20.4 | NeoForge 20.4.x | 17 | none | `1.20.4-neoforge` | Supported |
+| 1.20.2–1.20.4 | 1.20.4 | NeoForge 20.2.x–20.4.x | 17 | none | `1.20.4-neoforge` | Supported |
 | 1.20.5–1.20.6 | 1.20.6 | Forge 50.x | 21 | none | `1.20.6-forge` | Supported |
 | 1.20.5–1.20.6 | 1.20.6 | Fabric 0.16.x | 21 | Fabric API | `1.20.6-fabric` | Supported |
-| 1.20.5–1.20.6 | 1.20.6 | NeoForge 20.6.x | 21 | none | `1.20.6-neoforge` | Supported |
-| 1.21–1.21.4 | 1.21.1 | Forge 52.x | 21 | none | `1.21.1-forge` | Supported |
+| 1.20.5–1.20.6 | 1.20.6 | NeoForge 20.5.x–20.6.x | 21 | none | `1.20.6-neoforge` | Supported |
+| 1.21–1.21.4 | 1.21.1 | Forge 51.x–54.x | 21 | none | `1.21.1-forge` | Supported |
 | 1.21–1.21.4 | 1.21.1 | Fabric 0.16.x | 21 | Fabric API | `1.21.1-fabric` | Supported |
-| 1.21–1.21.4 | 1.21.1 | NeoForge 21.1.x | 21 | none | `1.21.1-neoforge` | Supported |
+| 1.21–1.21.4 | 1.21.1 | NeoForge 21.0.x–21.4.x | 21 | none | `1.21.1-neoforge` | Supported |
 | 1.21.5 | 1.21.5 | Forge 55.x | 21 | none | `1.21.5-forge` | Supported |
 | 1.21.6–1.21.8 | 1.21.8 | Forge 56.x–58.x | 21 | none | `1.21.8-forge` | Supported |
 | 1.21.5–1.21.8 | 1.21.8 | Fabric 0.19.x | 21 | Fabric API | `1.21.8-fabric` | Supported |
@@ -28,11 +28,13 @@ Every row below is a separate release artifact. Install the JAR that matches bot
 | 1.21.11 | 1.21.11 | Forge 61.x | 21 | none | `1.21.11-forge` | Supported |
 | 1.21.11 | 1.21.11 | Fabric 0.19.x | 21 | Fabric API | `1.21.11-fabric` | Supported |
 | 1.21.11 | 1.21.11 | NeoForge 21.11.x | 21 | none | `1.21.11-neoforge` | Supported |
-| 26.1–26.2 | 26.2 | Forge 65.x | 25 | none | `26.2-forge` | Supported |
+| 26.1–26.2 | 26.2 | Forge 62.x–65.x | 25 | none | `26.2-forge` | Supported |
 | 26.1–26.2 | 26.2 | Fabric 0.19.x | 25 | Fabric API | `26.2-fabric` | Supported |
-| 26.1–26.2 | 26.2 | NeoForge 26.2.x | 25 | none | `26.2-neoforge` | Supported |
+| 26.1–26.2 | 26.2 | NeoForge 26.1.x–26.2.x | 25 | none | `26.2-neoforge` | Supported |
 
-Metadata version ranges cover every patch inside each band. Forge splits 1.21.5–1.21.8 in two because Forge 56 (1.21.6) moved to EventBus 7, which is incompatible with Forge 55. A successful load outside these rows does not imply support.
+Metadata version ranges cover every patch inside each band. Forge splits 1.21.5–1.21.8 in two because Forge 56 (1.21.6) moved to EventBus 7, which is incompatible with Forge 55. Each loader's minimum version matches the oldest Minecraft patch of the band. A successful load outside these rows does not imply support.
+
+NeoForge 20.4.0–20.4.247 cannot open any container for vanilla clients, vanilla chests included, so the recovery bin does not open for them either. NeoForge fixed this in 20.4.248; use that build or newer on 1.20.4 servers that accept vanilla clients.
 
 ## Artifact policy
 
