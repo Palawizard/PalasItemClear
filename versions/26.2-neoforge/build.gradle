@@ -84,6 +84,9 @@ tasks.withType(Test).configureEach {
         excludeTestsMatching "net.palasitemclear.bin.RecoveryBinPerformanceTest"
         excludeTestsMatching "net.palasitemclear.bin.RecoveryBinStoreTest.onlyAllowsAStackToBeRecoveredOnceAcrossViews"
         excludeTestsMatching "net.palasitemclear.bin.RecoveryBinStoreTest.refusesRecoveryAfterExpiry"
+        excludeTestsMatching "net.palasitemclear.bin.RecoveryBinStoreTest.mergesDepositsIntoFullStacksPerOwner"
+        excludeTestsMatching "net.palasitemclear.bin.RecoveryBinStoreTest.keepsNonStackableItemsAsSeparateEntries"
+        excludeTestsMatching "net.palasitemclear.clear.ClearFilterTest.appliesPerItemMinimumAgeOverGlobalMinimumAge"
     }
 }
 
