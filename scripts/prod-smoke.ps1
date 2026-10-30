@@ -264,7 +264,11 @@ if (-not $SkipBuild) {
         if ($loaderConfig.path -in @('forge', 'fabric')) {
             & (Join-Path $projectRoot 'gradlew.bat') ":$($loaderConfig.path):build" '--no-daemon' $toolchains
         } else {
-            & (Join-Path $projectRoot 'gradlew.bat') '-p' $versionRoot 'build' '--no-daemon' $toolchains
+            # Bands pin their own Gradle (ForgeGradle 7 and recent Loom need Gradle 9), so
+            # prefer the band's wrapper over the root 8.12 one.
+            $wrapper = Join-Path $versionRoot 'gradlew.bat'
+            if (-not (Test-Path -LiteralPath $wrapper)) { $wrapper = Join-Path $projectRoot 'gradlew.bat' }
+            & $wrapper '-p' $versionRoot 'build' '--no-daemon' $toolchains
         }
         if ($LASTEXITCODE -ne 0) { throw "Gradle build failed for $BandId/$Loader." }
     } finally { $env:JAVA_HOME = $javaHomePrev }
