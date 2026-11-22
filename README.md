@@ -14,13 +14,9 @@
 
 [Features](#features) | [Installation](#installation) | [Configuration](#configuration) | [Commands](#commands) | [Compatibility](#compatibility) | [Verification](#verification)
 
----
-
 <p align="center">
   <img src="docs/assets/screen%201.png" alt="Colored chat warnings counting down before a clear, then a &quot;Cleared 7 dropped items&quot; confirmation" width="820">
 </p>
-
----
 
 ## Features
 
@@ -55,8 +51,6 @@
 - Every Minecraft band from 1.20.1 to 26.2, with no gaps or overlaps
 - Server-side only; vanilla clients can still connect
 
----
-
 ## Installation
 
 1. Download the JAR that matches both your Minecraft version band and server loader from [GitHub Releases](https://github.com/Palawizard/PalasItemClear/releases).
@@ -65,8 +59,6 @@
 4. Start the server once to generate `config/palasitemclear.json`.
 
 Never reuse a JAR across Minecraft version bands.
-
----
 
 ## Configuration
 
@@ -80,8 +72,6 @@ Set `"warningSeconds": [30]` to keep only the 30-second warning, or `[]` to disa
 `excludedItems` and `minAgeTicksOverrides` accept item tags such as `#minecraft:logs`.
 
 Run `/palasitemclear reload` after editing the file. The full schema and an example live in [docs/SUPPORT.md](docs/SUPPORT.md#configuration-reference).
-
----
 
 ## Commands
 
@@ -100,15 +90,11 @@ All commands require permission level 2.
 | `/palasitemclear reload` | Reload the configuration file |
 | `/palasitemclear set interval <seconds>` | Change and save the clear interval |
 
----
-
 ## Compatibility
 
 Pala's Item Clear ships a separate artifact for every Minecraft version band and loader, from 1.20.1 through 26.2. Metadata ranges cover every patch with no gaps or overlaps, so exactly one artifact matches any supported server.
 
 The full matrix, Java requirements, companion mods, and porting policy live in [docs/SUPPORT.md](docs/SUPPORT.md).
-
----
 
 ## Architecture
 
@@ -135,8 +121,6 @@ server tick  →  scheduler countdown  →  warnings at 60s, 30s, 5s
 
 Every clear runs on the server thread and only iterates loaded server levels.
 
----
-
 ## Tech stack
 
 | Layer | Technology |
@@ -149,8 +133,6 @@ Every clear runs on the server thread and only iterates loaded server levels.
 | Verification | JUnit unit tests and real-server smoke |
 | CI and releases | GitHub Actions matrix; artifacts published on `v*` tags |
 
----
-
 ## Verification
 
 ```powershell
@@ -162,8 +144,6 @@ Every clear runs on the server thread and only iterates loaded server levels.
 
 `prod-smoke-all.ps1` installs each loader's real dedicated server, drops the packaged JAR plus companions, and asserts the item clearing scheduler starts and stops on every supported band.
 
----
-
 ## Contributing and releases
 
 - Integration branch: `dev`
@@ -173,12 +153,8 @@ Every clear runs on the server thread and only iterates loaded server levels.
 - Compatibility and porting policy: [docs/SUPPORT.md](docs/SUPPORT.md)
 - Changelog: [CHANGELOG.md](CHANGELOG.md)
 
----
-
 ## License
 
 Distributed under the [MIT License](LICENSE).
-
----
 
 Pala's Item Clear | Server-side | Minecraft 1.20.1 to 26.2
